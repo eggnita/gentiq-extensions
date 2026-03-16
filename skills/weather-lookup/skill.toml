@@ -1,0 +1,28 @@
+[package]
+name = "weather-lookup"
+version = "1.0.0"
+description = "Look up current weather conditions for any city worldwide"
+author = "Gentiq"
+icon = "🌤️"
+category = "utilities"
+tags = ["weather", "lookup", "utility"]
+
+[routing]
+default_operation = "extract"
+default_complexity = "trivial"
+
+[routing.tasks.check_weather]
+operation = "extract"
+complexity = "trivial"
+description = "Fetch current weather for a location"
+triggers = ["weather", "temperature", "forecast", "rain", "sunny", "cold", "hot", "what's the weather"]
+
+[routing.tasks.compare_weather]
+operation = "analyze"
+complexity = "routine"
+description = "Compare weather across multiple locations"
+triggers = ["compare weather", "warmer", "colder", "weather difference"]
+
+[permissions]
+network = ["wttr.in:443"]
+tools = ["weather_lookup"]
