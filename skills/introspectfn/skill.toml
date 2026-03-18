@@ -1,0 +1,98 @@
+[package]
+name = "introspectfn-erp"
+version = "0.1.0"
+description = "Virtual accountant skill — ERP analysis, bookkeeping proposals, and financial insights via IntrospectFN"
+author = "Gentiq"
+icon = "📊"
+category = "accounting"
+tags = ["erp", "accounting", "bookkeeping", "fortnox", "finance", "analysis", "virtual-accountant"]
+
+[routing]
+default_operation = "analyze"
+default_complexity = "routine"
+
+# --- Read / Browse tasks (fast tier) ---
+
+[routing.tasks.check_health]
+operation = "extract"
+complexity = "trivial"
+description = "Check IntrospectFN API health and connection status"
+triggers = ["erp health", "api status", "is erp up", "connection status"]
+
+[routing.tasks.list_companies]
+operation = "extract"
+complexity = "trivial"
+description = "List connected ERP companies and their token health"
+triggers = ["list companies", "connected companies", "show companies", "which companies", "erp companies"]
+
+[routing.tasks.dashboard]
+operation = "extract"
+complexity = "routine"
+description = "Show dashboard metrics — unbooked vouchers, staged actions, sync freshness"
+triggers = ["dashboard", "overview", "erp summary", "company status", "bookkeeping status"]
+
+[routing.tasks.browse_records]
+operation = "extract"
+complexity = "routine"
+description = "Browse ERP records — vouchers, invoices, suppliers, customers, accounts"
+triggers = ["show vouchers", "list invoices", "browse records", "show suppliers", "show customers", "list accounts", "erp records", "look up invoice", "find voucher", "show supplier invoices"]
+
+[routing.tasks.sync_status]
+operation = "extract"
+complexity = "trivial"
+description = "Check sync job status and data freshness"
+triggers = ["sync status", "sync data", "data freshness", "is data up to date"]
+
+# --- Analysis tasks (standard tier) ---
+
+[routing.tasks.account_analysis]
+operation = "analyze"
+complexity = "routine"
+description = "Analyze vouchers grouped by account, review balances and trends"
+triggers = ["account analysis", "analyze accounts", "account breakdown", "debit credit analysis", "account balances", "year balances"]
+
+[routing.tasks.integrity_check]
+operation = "analyze"
+complexity = "routine"
+description = "Run data integrity checks on synced ERP records"
+triggers = ["integrity check", "data integrity", "check data", "validate records", "consistency check"]
+
+[routing.tasks.review_staging]
+operation = "analyze"
+complexity = "routine"
+description = "Review staged bookkeeping actions — proposed, approved, or failed"
+triggers = ["review staging", "staged actions", "pending approvals", "what's staged", "review proposals", "bookkeeping queue"]
+
+[routing.tasks.financial_review]
+operation = "analyze"
+complexity = "complex"
+description = "Comprehensive financial review — cross-account analysis, anomaly detection, period comparison"
+triggers = ["financial review", "month end review", "period review", "quarterly review", "annual review", "close the books", "financial analysis"]
+
+# --- Proposal tasks (thinking tier) ---
+
+[routing.tasks.propose_voucher]
+operation = "reason"
+complexity = "complex"
+description = "Propose a new bookkeeping voucher with full accounting reasoning"
+triggers = ["create voucher", "book entry", "propose voucher", "new booking", "record transaction", "book invoice", "bookkeeping entry", "journal entry"]
+
+[routing.tasks.propose_correction]
+operation = "reason"
+complexity = "complex"
+description = "Propose a correction voucher to fix a previous entry"
+triggers = ["correction", "fix entry", "reverse voucher", "correct booking", "amend entry", "rectify"]
+
+[routing.tasks.suggest_actions]
+operation = "reason"
+complexity = "complex"
+description = "Analyze data and suggest ERP actions — missing bookings, unmatched invoices, reconciliation"
+triggers = ["suggest actions", "what should I book", "missing entries", "unmatched invoices", "reconcile", "what needs attention", "recommendations"]
+
+[credentials]
+required = ["IFN_API_KEY", "IFN_BASE_URL"]
+optional = []
+
+[permissions]
+network = ["localhost:8000", "ifn-stage.mayuda.com:443"]
+tools = ["ifn"]

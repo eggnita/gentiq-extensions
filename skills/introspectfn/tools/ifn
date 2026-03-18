@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# ifn — IntrospectFN CLI
+# Modular CLI for ERP analysis and bookkeeping operations.
+#
+# Usage: ifn <command> [subcommand] [options]
+#
+# Environment:
+#   IFN_BASE_URL   API base URL (default: http://localhost:8000)
+#   IFN_API_KEY    API key for authentication (Bearer token)
+#   IFN_CONFIG     Path to config file (default: ~/.ifn/config)
+
+set -euo pipefail
+
+# Resolve script directory (works with symlinks)
+IFN_ROOT="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")")" && pwd)"
+IFN_CLI_DIR="${IFN_ROOT}/ifn-cli"
+
+# Source core libraries
+# shellcheck source=ifn-cli/config.sh
+source "${IFN_CLI_DIR}/config.sh"
+# shellcheck source=ifn-cli/lib/http.sh
+source "${IFN_CLI_DIR}/lib/http.sh"
+# shellcheck source=ifn-cli/lib/format.sh
+source "${IFN_CLI_DIR}/lib/format.sh"
+# shellcheck source=ifn-cli/lib/auth.sh
+source "${IFN_CLI_DIR}/lib/auth.sh"
+
+# Load config
+ifn_load_config
+
+# --- Subcommand dispatch ---
+
+ifn_usage() {
+    cat <<'USAGE'
+ifn — IntrospectFN CLI
+
+Usage: ifn <command> [subcommand] [options]
+
+Commands:
+  health                          Check API connectivity
+  companies  list                 List connected ERP companies
+  dashboard  <connection_id>      Dashboard metrics for a company
+  browse     <conn_id> <resource> [id]  Browse live ERP records
+  records    <conn_id> <doc_type> [id]  Browse synced local records
+  analysis   accounts|balances|integrity|series  Financial analysis
+  sync       status|overview|years               Sync status (read-only)
+  staging    list|list-all|get|propose|next-number  Staging workflow
+  auth       status                             Check API key
+  version                         Show CLI version
+
+Options:
+  --help, -h     Show this help
+  --json         Raw JSON output (no formatting)
+  --verbose, -v  Verbose output
+
+Environment:
+  IFN_BASE_URL   API base URL (default: http://localhost:8000)
+  IFN_API_KEY    API key (Bearer token, issued in IntrospectFN web UI)
+
+Examples:
+  ifn health
+  ifn companies list
+  ifn dashboard abc-123-uuid
+  ifn analysis accounts abc-123-uuid
+  ifn staging propose abc-123-uuid proposal.json
+USAGE
+}
+
+ifn_version() {
+    echo "ifn 0.1.0 (IntrospectFN CLI)"
+}
+
+# Parse global flags
+IFN_RAW_JSON="${IFN_RAW_JSON:-false}"
+IFN_VERBOSE="${IFN_VERBOSE:-false}"
+
+ARGS=()
+for arg in "$@"; do
+    case "$arg" in
+        --json) IFN_RAW_JSON=true ;;
+        --verbose|-v) IFN_VERBOSE=true ;;
+        --help|-h)
+            if [ ${#ARGS[@]} -eq 0 ]; then
+                ifn_usage
+                exit 0
+            fi
+            ARGS+=("$arg")
+            ;;
+        *) ARGS+=("$arg") ;;
+    esac
+done
+export IFN_RAW_JSON IFN_VERBOSE
+
+set -- "${ARGS[@]+"${ARGS[@]}"}"
+
+if [ $# -eq 0 ]; then
+    ifn_usage
+    exit 1
+fi
+
+COMMAND="$1"
+shift
+
+# Source and dispatch command
+case "$COMMAND" in
+    health)
+        source "${IFN_CLI_DIR}/commands/health.sh"
+        cmd_health "$@"
+        ;;
+    companies)
+        source "${IFN_CLI_DIR}/commands/companies.sh"
+        cmd_companies "$@"
+        ;;
+    dashboard)
+        source "${IFN_CLI_DIR}/commands/dashboard.sh"
+        cmd_dashboard "$@"
+        ;;
+    browse)
+        source "${IFN_CLI_DIR}/commands/browse.sh"
+        cmd_browse "$@"
+        ;;
+    records)
+        source "${IFN_CLI_DIR}/commands/records.sh"
+        cmd_records "$@"
+        ;;
+    analysis)
+        source "${IFN_CLI_DIR}/commands/analysis.sh"
+        cmd_analysis "$@"
+        ;;
+    sync)
+        source "${IFN_CLI_DIR}/commands/sync.sh"
+        cmd_sync "$@"
+        ;;
+    staging)
+        source "${IFN_CLI_DIR}/commands/staging.sh"
+        cmd_staging "$@"
+        ;;
+    auth)
+        source "${IFN_CLI_DIR}/commands/auth.sh"
+        cmd_auth "$@"
+        ;;
+    version|--version)
+        ifn_version
+        ;;
+    *)
+        echo "Error: unknown command '$COMMAND'" >&2
+        echo "Run 'ifn --help' for usage." >&2
+        exit 1
+        ;;
+esac

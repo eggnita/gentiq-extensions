@@ -29,6 +29,7 @@ my-skill/
 | Skill | Description | Category |
 |-------|-------------|----------|
 | [weather-lookup](skills/weather-lookup/) | Look up current weather for any city using wttr.in | utilities |
+| [introspectfn-erp](skills/introspectfn/) | Virtual accountant — ERP analysis, bookkeeping proposals, and financial insights via IntrospectFN | accounting |
 
 ## Creating a Skill
 
