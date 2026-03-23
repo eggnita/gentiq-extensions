@@ -89,10 +89,58 @@ complexity = "complex"
 description = "Analyze data and suggest ERP actions — missing bookings, unmatched invoices, reconciliation"
 triggers = ["suggest actions", "what should I book", "missing entries", "unmatched invoices", "reconcile", "what needs attention", "recommendations"]
 
-[credentials]
-required = ["IFN_API_KEY", "IFN_BASE_URL"]
-optional = []
+# --- Setup (bundled UI for dashboard) ---
+[setup]
+ui = "setup/index.html"
+type = "oauth_provision"
+display_name = "Connect to IntrospectFN"
+description = "Authorize this Gent to access your IntrospectFN ERP data"
 
+# --- Credentials ---
+[credentials]
+required = ["IFN_API_KEY"]
+configurable = ["IFN_BASE_URL"]
+
+[credentials.defaults]
+IFN_BASE_URL = "https://ifn-stage.mayuda.com"
+
+# --- Cron Jobs ---
+[[cron]]
+name = "health_check"
+schedule = "0 */6 * * *"
+hook = "hooks/health_check.sh"
+description = "Check API connectivity and key validity"
+timeout = 30
+
+[[cron]]
+name = "check_rotation"
+schedule = "0 8 * * *"
+hook = "hooks/check_rotation.sh"
+description = "Check if API key rotation is needed"
+timeout = 30
+
+[[cron]]
+name = "data_freshness"
+schedule = "0 9 * * 1-5"
+hook = "hooks/check_freshness.sh"
+description = "Check ERP sync freshness, alert if stale"
+timeout = 60
+
+# --- Lifecycle Hooks ---
+[lifecycle]
+on_install = "hooks/on_install.sh"
+on_setup_complete = "hooks/on_setup_complete.sh"
+on_credential_update = "hooks/on_credential_update.sh"
+on_uninstall = "hooks/on_uninstall.sh"
+
+# --- Status (dashboard widget) ---
+[status]
+hook = "hooks/status.sh"
+refresh_interval = 3600
+
+# --- Permissions ---
 [permissions]
-network = ["localhost:8000", "ifn-stage.mayuda.com:443"]
+network = ["ifn-stage.mayuda.com:443"]
 tools = ["ifn"]
+cron = true
+setup_ui = true

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # http.sh — HTTP request helpers (curl wrappers with API key auth)
+# Supports key rotation detection via X-Key-Rotation-Required header.
 
 # Check dependencies
 _ifn_check_deps() {
@@ -23,9 +24,14 @@ ifn_http() {
     local body="${3:-}"
     local url="${IFN_BASE_URL}${path}"
 
+    # Use a temp file for response headers so we can inspect rotation signals
+    local header_file
+    header_file=$(mktemp)
+
     local -a curl_args=(
         -s -S
         -w '\n%{http_code}'
+        -D "$header_file"
         -X "$method"
         -H "Content-Type: application/json"
         -H "Accept: application/json"
@@ -50,9 +56,14 @@ ifn_http() {
 
     local response
     response=$(curl "${curl_args[@]}" "$url" 2>&1) || {
+        rm -f "$header_file"
         echo '{"error": "Failed to connect to IntrospectFN API at '"${IFN_BASE_URL}"'. Is the server running?"}'
         return 1
     }
+
+    # Check for key rotation signal in response headers
+    _ifn_check_rotation_headers "$header_file"
+    rm -f "$header_file"
 
     # Split response body and status code
     local status_code
@@ -92,6 +103,24 @@ ifn_http() {
             return 1
             ;;
     esac
+}
+
+# Check rotation headers and warn if rotation is needed
+_ifn_check_rotation_headers() {
+    local header_file="$1"
+    [ -f "$header_file" ] || return 0
+
+    local rotation_required
+    rotation_required=$(grep -i '^X-Key-Rotation-Required:' "$header_file" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '\r')
+
+    if [ "$rotation_required" = "true" ]; then
+        local hard_expires
+        hard_expires=$(grep -i '^X-Key-Hard-Expires:' "$header_file" 2>/dev/null | head -1 | sed 's/^[^:]*: *//' | tr -d '\r')
+        echo "[warning] Key rotation required. Run: ifn auth rotate" >&2
+        if [ -n "$hard_expires" ]; then
+            echo "[warning] Hard expiry: ${hard_expires}" >&2
+        fi
+    fi
 }
 
 # Convenience wrappers

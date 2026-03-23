@@ -45,7 +45,7 @@ Commands:
   analysis   accounts|balances|integrity|series  Financial analysis
   sync       status|overview|years               Sync status (read-only)
   staging    list|list-all|get|propose|next-number  Staging workflow
-  auth       status                             Check API key
+  auth       status|rotate                      API key status and rotation
   version                         Show CLI version
 
 Options:

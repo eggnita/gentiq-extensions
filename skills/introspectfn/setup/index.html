@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connect to IntrospectFN</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa; color: #333; padding: 32px; max-width: 560px; margin: 0 auto;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 24px; }
+    .card {
+      background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card.connected { border-left: 4px solid #22c55e; }
+    .card.disconnected { border-left: 4px solid #e5e7eb; }
+    .card.error-state { border-left: 4px solid #ef4444; }
+    label { font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px; }
+    input[type="text"] {
+      width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 0.85rem; outline: none; transition: border-color 0.15s;
+    }
+    input[type="text"]:focus { border-color: #2563eb; }
+    .field { margin-bottom: 12px; }
+    .row { display: flex; gap: 12px; }
+    .row > .field { flex: 1; }
+    .btn {
+      display: inline-block; padding: 10px 20px; border-radius: 8px; border: none;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: all 0.15s; text-align: center;
+    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-orange { background: #fef3c7; color: #92400e; }
+    .kv { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+    .kv .k { color: #888; min-width: 100px; font-size: 0.85rem; }
+    .kv .v { font-size: 0.85rem; }
+    .alert {
+      border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.85rem;
+    }
+    .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+    .alert-error { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+    .alert-info { background: #dbeafe; border: 1px solid #93c5fd; color: #1e40af; }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px; border: 2px solid #fff;
+      border-top-color: transparent; border-radius: 50%;
+      animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none; }
+    code {
+      background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>IntrospectFN</h1>
+  <p class="subtitle">Connect this Gent to your IntrospectFN ERP</p>
+
+  <!-- State: Disconnected (form) -->
+  <div id="view-connect" class="card disconnected">
+    <p style="color:#888; margin-bottom:16px">Enter the Gent's identity and connect to IntrospectFN.</p>
+    <div class="row">
+      <div class="field">
+        <label for="gent-email">Gent Email</label>
+        <input type="text" id="gent-email" placeholder="gent@company.com">
+      </div>
+      <div class="field">
+        <label for="gent-name">Gent Name</label>
+        <input type="text" id="gent-name" placeholder="Finance Gent">
+      </div>
+    </div>
+    <div class="field">
+      <label for="base-url">IntrospectFN URL</label>
+      <input type="text" id="base-url" value="https://ifn-stage.mayuda.com">
+    </div>
+    <button id="btn-connect" class="btn btn-primary" style="width:100%; margin-top:4px">
+      Connect to IntrospectFN
+    </button>
+    <p style="margin-top:12px; font-size:0.8rem; color:#999">
+      You will be redirected to IntrospectFN to authorize access.
+    </p>
+  </div>
+
+  <!-- State: Connecting (spinner) -->
+  <div id="view-connecting" class="card hidden">
+    <div class="alert alert-info">
+      <span class="spinner"></span> Waiting for authorization...
+    </div>
+    <p style="margin-top:12px; font-size:0.85rem; color:#666">
+      Complete the authorization in the popup window. This page will update automatically.
+    </p>
+  </div>
+
+  <!-- State: Exchanging code -->
+  <div id="view-exchanging" class="card hidden">
+    <div class="alert alert-info">
+      <span class="spinner"></span> Exchanging authorization code...
+    </div>
+  </div>
+
+  <!-- State: Connected -->
+  <div id="view-connected" class="card connected hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <span class="badge badge-green">Connected</span>
+      <button id="btn-disconnect" class="btn btn-secondary" style="font-size:0.8rem; padding:6px 14px">
+        Disconnect
+      </button>
+    </div>
+    <div id="connected-details" style="margin-top:16px"></div>
+  </div>
+
+  <!-- State: Error -->
+  <div id="view-error" class="card error-state hidden">
+    <div id="error-message" class="alert alert-error"></div>
+    <button id="btn-retry" class="btn btn-secondary" style="margin-top:12px">Try Again</button>
+  </div>
+
+  <script>
+    "use strict";
+
+    // --- State ---
+    var state = {
+      gentEmail: "",
+      gentName: "",
+      baseUrl: "https://ifn-stage.mayuda.com",
+      credentials: {},
+      popup: null,
+      csrfToken: ""
+    };
+
+    // --- DOM refs ---
+    var views = {
+      connect: document.getElementById("view-connect"),
+      connecting: document.getElementById("view-connecting"),
+      exchanging: document.getElementById("view-exchanging"),
+      connected: document.getElementById("view-connected"),
+      error: document.getElementById("view-error")
+    };
+
+    function showView(name) {
+      Object.keys(views).forEach(function(k) {
+        views[k].classList.toggle("hidden", k !== name);
+      });
+    }
+
+    // --- Crypto helper: generate CSRF token ---
+    function generateToken() {
+      var arr = new Uint8Array(24);
+      crypto.getRandomValues(arr);
+      return Array.from(arr, function(b) { return b.toString(16).padStart(2, "0"); }).join("");
+    }
+
+    // --- postMessage handling ---
+    function postToParent(type, payload) {
+      if (window.parent !== window) {
+        window.parent.postMessage(Object.assign({ type: type }, payload || {}), "*");
+      }
+    }
+
+    window.addEventListener("message", function(event) {
+      var data = event.data;
+      if (!data || !data.type) return;
+
+      switch (data.type) {
+        case "setup:init":
+          // Dashboard sends initial context
+          if (data.gent_email) {
+            state.gentEmail = data.gent_email;
+            document.getElementById("gent-email").value = data.gent_email;
+          }
+          if (data.gent_name) {
+            state.gentName = data.gent_name;
+            document.getElementById("gent-name").value = data.gent_name;
+          }
+          if (data.credentials && data.credentials.IFN_BASE_URL) {
+            state.baseUrl = data.credentials.IFN_BASE_URL;
+            document.getElementById("base-url").value = data.credentials.IFN_BASE_URL;
+          }
+          if (data.base_url) {
+            state.baseUrl = data.base_url;
+            document.getElementById("base-url").value = data.base_url;
+          }
+          // If already has a key, show connected state
+          if (data.credentials && data.credentials.IFN_API_KEY) {
+            state.credentials = data.credentials;
+            showConnected();
+          }
+          break;
+
+        case "setup:exchange_result":
+          handleExchangeResult(data);
+          break;
+      }
+    });
+
+    // --- Connect button ---
+    document.getElementById("btn-connect").addEventListener("click", function() {
+      var email = document.getElementById("gent-email").value.trim();
+      var name = document.getElementById("gent-name").value.trim();
+      var baseUrl = document.getElementById("base-url").value.trim().replace(/\/+$/, "");
+
+      if (!email) {
+        showError("Please enter the Gent email address.");
+        return;
+      }
+      if (!name) {
+        showError("Please enter the Gent name.");
+        return;
+      }
+
+      state.gentEmail = email;
+      state.gentName = name;
+      state.baseUrl = baseUrl;
+      state.csrfToken = generateToken();
+
+      // Build the provisioning URL
+      var params = new URLSearchParams({
+        email: email,
+        name: name,
+        client_id: "gentiq-dashboard",
+        redirect_uri: buildCallbackUrl(),
+        state: state.csrfToken
+      });
+
+      var provisionUrl = baseUrl + "/auth/api-provision?" + params.toString();
+
+      // Open popup for the OAuth flow
+      var w = 520, h = 680;
+      var left = (screen.width - w) / 2;
+      var top = (screen.height - h) / 2;
+      state.popup = window.open(
+        provisionUrl,
+        "ifn_auth",
+        "width=" + w + ",height=" + h + ",left=" + left + ",top=" + top + ",scrollbars=yes"
+      );
+
+      showView("connecting");
+
+      // Poll for popup close (user cancelled)
+      var pollTimer = setInterval(function() {
+        if (state.popup && state.popup.closed) {
+          clearInterval(pollTimer);
+          // Only go back to connect if we haven't moved to exchanging/connected
+          if (!views.exchanging.classList.contains("hidden")) return;
+          if (!views.connected.classList.contains("hidden")) return;
+          if (views.connecting.classList.contains("hidden")) return;
+          showView("connect");
+        }
+      }, 500);
+    });
+
+    // --- Build callback URL ---
+    // The callback is handled by reading the popup's URL after redirect
+    function buildCallbackUrl() {
+      // The callback URL points to a page that will extract the code and post it back.
+      // We use the setup page itself as callback — the popup will load this page with ?code=...
+      return window.location.origin + window.location.pathname + "?callback=1";
+    }
+
+    // --- Handle callback (when this page loads as the popup callback target) ---
+    (function checkCallback() {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get("callback") !== "1") return;
+
+      var code = params.get("code") || "";
+      var returnedState = params.get("state") || "";
+
+      // We're inside the popup — send the code to the opener
+      if (window.opener) {
+        window.opener.postMessage({
+          type: "_ifn_callback",
+          code: code,
+          state: returnedState
+        }, "*");
+        document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif">' +
+          '<p style="color:#666">Authorization received. You can close this window.</p></div>';
+        setTimeout(function() { window.close(); }, 1500);
+      }
+    })();
+
+    // --- Listen for callback from popup ---
+    window.addEventListener("message", function(event) {
+      var data = event.data;
+      if (!data || data.type !== "_ifn_callback") return;
+
+      // Close popup
+      if (state.popup) {
+        try { state.popup.close(); } catch(e) {}
+        state.popup = null;
+      }
+
+      // Verify CSRF
+      if (data.state !== state.csrfToken) {
+        showError("Security token mismatch. Please try again.");
+        return;
+      }
+
+      if (!data.code) {
+        showError("No authorization code received.");
+        return;
+      }
+
+      // Request the dashboard to do server-to-server token exchange
+      showView("exchanging");
+      postToParent("setup:exchange", {
+        code: data.code,
+        client_id: "gentiq-dashboard",
+        token_url: state.baseUrl + "/auth/api-provision/token"
+      });
+    });
+
+    // --- Handle exchange result from dashboard ---
+    function handleExchangeResult(data) {
+      if (data.ok && data.credentials) {
+        state.credentials = data.credentials;
+        showConnected();
+        // Notify dashboard that setup is complete
+        postToParent("setup:complete", {
+          credentials: data.credentials
+        });
+      } else {
+        showError(data.error || "Token exchange failed. Please try again.");
+      }
+    }
+
+    // --- Show connected state ---
+    function showConnected() {
+      var details = document.getElementById("connected-details");
+      var keyDisplay = "";
+      if (state.credentials.IFN_API_KEY) {
+        var k = state.credentials.IFN_API_KEY;
+        keyDisplay = k.length > 18 ? k.substring(0, 12) + "..." + k.substring(k.length - 6) : "***";
+      }
+
+      var html = "";
+      if (state.gentEmail) {
+        html += '<div class="kv"><span class="k">Gent</span><span class="v">' +
+          escapeHtml(state.gentName || "") + ' (' + escapeHtml(state.gentEmail) + ')</span></div>';
+      }
+      html += '<div class="kv"><span class="k">Server</span><span class="v">' +
+        escapeHtml(state.credentials.IFN_BASE_URL || state.baseUrl) + '</span></div>';
+      if (keyDisplay) {
+        html += '<div class="kv"><span class="k">API Key</span><span class="v"><code>' +
+          escapeHtml(keyDisplay) + '</code></span></div>';
+      }
+      details.innerHTML = html;
+      showView("connected");
+    }
+
+    // --- Show error state ---
+    function showError(msg) {
+      document.getElementById("error-message").textContent = msg;
+      showView("error");
+    }
+
+    // --- Disconnect ---
+    document.getElementById("btn-disconnect").addEventListener("click", function() {
+      state.credentials = {};
+      showView("connect");
+    });
+
+    // --- Retry ---
+    document.getElementById("btn-retry").addEventListener("click", function() {
+      showView("connect");
+    });
+
+    // --- Escape HTML ---
+    function escapeHtml(str) {
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    // --- Notify dashboard that setup page is ready ---
+    postToParent("setup:ready", {});
+  </script>
+</body>
+</html>

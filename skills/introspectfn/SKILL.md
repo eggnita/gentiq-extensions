@@ -26,6 +26,7 @@ ifn <command> [subcommand] [options]
 |---------|-------------|
 | `ifn health` | Check API connectivity |
 | `ifn auth status` | Verify API key is valid |
+| `ifn auth rotate` | Self-rotate the API key |
 | `ifn companies list` | List connected ERP companies |
 | `ifn dashboard <connection_id>` | Dashboard metrics for a company |
 | `ifn browse <connection_id> <resource>` | Browse live ERP records |
@@ -171,6 +172,16 @@ When proposing a voucher, you MUST include:
 This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or developer in the IntrospectFN web UI. The key is scoped to the `assistant` role. It is configured as a credential in the GentiqOS admin dashboard when the skill is pushed to a Gent.
 
 The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.1.0` for audit trail.
+
+### Key Rotation
+
+The server may signal that key rotation is needed via response headers (`X-Key-Rotation-Required: true`). When this happens, the CLI prints a warning. To rotate:
+
+```
+ifn auth rotate
+```
+
+This performs self-service rotation: both old and new keys remain valid until the new key is first used for a normal API call, then the old key is burned. After rotation, update `IFN_API_KEY` in the GentiqOS admin dashboard with the new key.
 
 ## Error Handling
 

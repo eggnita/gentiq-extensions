@@ -81,6 +81,48 @@ if [ -d "${SKILL_DIR}/tools" ]; then
     done < <(find "${SKILL_DIR}/tools" -maxdepth 1 -type f 2>/dev/null)
 fi
 
+# --- V2 manifest validation ---
+
+v2_setup_type=""
+v2_cron_count=0
+v2_hook_count=0
+
+# Validate hooks referenced in skill.toml exist and are executable
+while IFS= read -r hook_path; do
+    hook_path=$(echo "$hook_path" | sed 's/^[^"]*"//;s/".*$//')
+    [ -z "$hook_path" ] && continue
+    full_path="${SKILL_DIR}/${hook_path}"
+    if [ ! -f "$full_path" ]; then
+        errors+=("hook not found: ${hook_path}")
+    elif [ ! -x "$full_path" ]; then
+        errors+=("hook not executable: ${hook_path}")
+    else
+        v2_hook_count=$((v2_hook_count + 1))
+    fi
+done < <(grep -E '^(hook|on_install|on_setup_complete|on_credential_update|on_uninstall)\s*=' "${SKILL_DIR}/skill.toml" 2>/dev/null || true)
+
+# Validate cron schedule expressions (5 fields)
+while IFS= read -r schedule_line; do
+    schedule=$(echo "$schedule_line" | sed 's/^[^"]*"//;s/".*$//')
+    [ -z "$schedule" ] && continue
+    field_count=$(echo "$schedule" | awk '{print NF}')
+    if [ "$field_count" -ne 5 ]; then
+        errors+=("invalid cron schedule (expected 5 fields): ${schedule}")
+    fi
+    v2_cron_count=$((v2_cron_count + 1))
+done < <(grep '^schedule\s*=' "${SKILL_DIR}/skill.toml" 2>/dev/null || true)
+
+# Validate setup UI file exists if declared
+setup_ui=$(grep '^ui\s*=' "${SKILL_DIR}/skill.toml" 2>/dev/null | head -1 | sed 's/^[^"]*"//;s/".*$//' || true)
+if [ -n "$setup_ui" ]; then
+    if [ ! -f "${SKILL_DIR}/${setup_ui}" ]; then
+        errors+=("setup UI file not found: ${setup_ui}")
+    fi
+fi
+
+# Extract setup type for summary
+v2_setup_type=$(grep '^type\s*=' "${SKILL_DIR}/skill.toml" 2>/dev/null | head -1 | sed 's/^[^"]*"//;s/".*$//' || true)
+
 if [ ${#errors[@]} -gt 0 ]; then
     echo ""
     echo "Validation errors:"
@@ -119,6 +161,16 @@ echo "  File:    ${ARCHIVE_PATH}"
 echo "  Size:    ${SIZE}"
 echo "  Skill:   ${SKILL_NAME}"
 echo "  Version: ${VERSION}"
+
+# V2 features summary
+if [ "$v2_hook_count" -gt 0 ] || [ "$v2_cron_count" -gt 0 ] || [ -n "$v2_setup_type" ]; then
+    echo ""
+    echo "V2 features:"
+    [ -n "$v2_setup_type" ] && echo "  Setup:   ${v2_setup_type}"
+    [ "$v2_cron_count" -gt 0 ] && echo "  Cron:    ${v2_cron_count} job(s)"
+    [ "$v2_hook_count" -gt 0 ] && echo "  Hooks:   ${v2_hook_count} hook(s)"
+fi
+
 echo ""
 echo "Contents:"
 tar -tzf "$ARCHIVE_PATH" | head -30

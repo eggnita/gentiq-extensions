@@ -22,6 +22,11 @@ my-skill/
     helper.sh
   config/             # Config templates (optional)
     settings.yml
+  setup/              # Setup UI page (v2, optional)
+    index.html
+  hooks/              # Lifecycle & cron hooks (v2, optional)
+    health_check.sh
+    on_install.sh
 ```
 
 ## Available Skills
@@ -70,6 +75,100 @@ optional = []
 network = ["api.example.com:443"]
 tools = ["my_tool"]
 ```
+
+### V2 Manifest Extensions
+
+Skills can declare setup flows, cron jobs, lifecycle hooks, and status widgets. V1 skills (without these sections) remain fully valid.
+
+#### Setup UI
+
+The `[setup]` section declares a bundled HTML page that the dashboard renders for credential provisioning.
+
+```toml
+[setup]
+ui = "setup/index.html"                   # HTML page loaded by dashboard
+type = "oauth_provision"                   # "oauth_provision" | "manual" | "none"
+display_name = "Connect to My Service"
+description = "Authorize this Gent to access your data"
+```
+
+Supported `type` values:
+- `oauth_provision` — OAuth-style redirect flow with server-side token exchange
+- `manual` — User manually enters credentials (API keys, tokens)
+- `none` — No setup needed (credentials pushed by admin)
+
+#### Credentials (extended)
+
+```toml
+[credentials]
+required = ["MY_API_KEY"]                  # Must be set before skill works
+configurable = ["MY_BASE_URL"]             # Admin can override; has default
+
+[credentials.defaults]
+MY_BASE_URL = "https://api.example.com"
+```
+
+`configurable` credentials have defaults in `[credentials.defaults]` and can optionally be overridden by the admin.
+
+#### Cron Jobs
+
+```toml
+[[cron]]
+name = "health_check"
+schedule = "0 */6 * * *"                   # Standard 5-field cron expression
+hook = "hooks/health_check.sh"
+description = "Check API connectivity"
+timeout = 30                               # Max runtime in seconds
+```
+
+Multiple `[[cron]]` entries are supported. gentd schedules and executes them, passing credentials as environment variables.
+
+#### Lifecycle Hooks
+
+```toml
+[lifecycle]
+on_install = "hooks/on_install.sh"
+on_setup_complete = "hooks/on_setup_complete.sh"
+on_credential_update = "hooks/on_credential_update.sh"
+on_uninstall = "hooks/on_uninstall.sh"
+```
+
+All hooks are executable scripts that receive credentials as env vars and output JSON to stdout.
+
+#### Status Widget
+
+```toml
+[status]
+hook = "hooks/status.sh"
+refresh_interval = 3600                    # Seconds between refreshes
+```
+
+The status hook provides data for the dashboard's skill status widget.
+
+#### Permissions (extended)
+
+```toml
+[permissions]
+network = ["api.example.com:443"]
+tools = ["my_tool"]
+cron = true                                # Skill uses cron jobs
+setup_ui = true                            # Skill has a setup UI page
+```
+
+#### Setup UI postMessage Contract
+
+The setup page communicates with the dashboard via `postMessage`:
+
+| Direction | Type | Payload |
+|-----------|------|---------|
+| Dashboard → Extension | `setup:init` | `{gent_email, gent_name, credentials, base_url}` |
+| Extension → Dashboard | `setup:ready` | `{}` — page loaded |
+| Extension → Dashboard | `setup:exchange` | `{code, client_id, token_url}` — request token exchange |
+| Dashboard → Extension | `setup:exchange_result` | `{ok, credentials}` or `{ok: false, error}` |
+| Extension → Dashboard | `setup:complete` | `{credentials: {KEY: val}}` |
+| Extension → Dashboard | `setup:error` | `{message}` |
+
+The `setup:exchange` message is critical for OAuth flows — it delegates the server-to-server code-to-key exchange to the dashboard backend, keeping raw keys out of the browser.
 
 ### Routing Operations
 
