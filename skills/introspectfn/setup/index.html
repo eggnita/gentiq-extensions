@@ -267,33 +267,10 @@
     });
 
     // --- Build callback URL ---
-    // The callback is handled by reading the popup's URL after redirect
+    // Uses the generic GentiqOS OAuth callback endpoint (stable path, registered on IFN)
     function buildCallbackUrl() {
-      // The callback URL points to a page that will extract the code and post it back.
-      // We use the setup page itself as callback — the popup will load this page with ?code=...
-      return window.location.origin + window.location.pathname + "?callback=1";
+      return window.location.origin + "/api/v1/skills/oauth-callback";
     }
-
-    // --- Handle callback (when this page loads as the popup callback target) ---
-    (function checkCallback() {
-      var params = new URLSearchParams(window.location.search);
-      if (params.get("callback") !== "1") return;
-
-      var code = params.get("code") || "";
-      var returnedState = params.get("state") || "";
-
-      // We're inside the popup — send the code to the opener
-      if (window.opener) {
-        window.opener.postMessage({
-          type: "_ifn_callback",
-          code: code,
-          state: returnedState
-        }, "*");
-        document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif">' +
-          '<p style="color:#666">Authorization received. You can close this window.</p></div>';
-        setTimeout(function() { window.close(); }, 1500);
-      }
-    })();
 
     // --- Listen for callback from popup ---
     window.addEventListener("message", function(event) {

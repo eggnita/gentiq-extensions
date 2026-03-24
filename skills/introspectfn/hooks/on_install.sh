@@ -26,6 +26,13 @@ command -v curl >/dev/null 2>&1 || errors+=("curl not installed")
 command -v jq >/dev/null 2>&1 || errors+=("jq not installed")
 
 if [ ${#errors[@]} -eq 0 ]; then
+    # Make ifn available in PATH via ~/bin symlink
+    mkdir -p "${HOME}/bin"
+    ln -sf "${SKILL_ROOT}/tools/ifn" "${HOME}/bin/ifn"
+    # Ensure ~/bin is in PATH for future shells
+    if ! grep -q 'HOME/bin' "${HOME}/.bashrc" 2>/dev/null; then
+        echo 'export PATH="$HOME/bin:$PATH"' >> "${HOME}/.bashrc"
+    fi
     jq -n '{ok: true}'
 else
     msg=$(printf '%s; ' "${errors[@]}")

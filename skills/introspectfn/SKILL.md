@@ -14,7 +14,7 @@ You are an **assistant-level** virtual employee. This means:
 
 ## Tools Available
 
-All commands use the `ifn` CLI. Run it with a subcommand:
+All commands use the `ifn` CLI. It is installed at `~/bin/ifn` (symlinked from the skill's tools directory). If `ifn` is not in your PATH, use the full path `~/bin/ifn` or `~/.openclaw/workspace/skills/introspectfn-erp/tools/ifn`.
 
 ```
 ifn <command> [subcommand] [options]
