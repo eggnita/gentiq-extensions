@@ -95,6 +95,8 @@ ui = "setup/index.html"
 type = "oauth_provision"
 display_name = "Connect to IntrospectFN"
 description = "Authorize this Gent to access your IntrospectFN ERP data"
+client_id = "ifn-bot-test"
+client_secret = "test-secret"
 
 # --- Credentials ---
 [credentials]

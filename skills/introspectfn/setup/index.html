@@ -136,6 +136,7 @@
       gentEmail: "",
       gentName: "",
       baseUrl: "https://ifn-stage.mayuda.com",
+      clientId: "ifn-bot-test",
       credentials: {},
       popup: null,
       csrfToken: ""
@@ -193,6 +194,9 @@
             state.baseUrl = data.base_url;
             document.getElementById("base-url").value = data.base_url;
           }
+          if (data.client_id) {
+            state.clientId = data.client_id;
+          }
           // If already has a key, show connected state
           if (data.credentials && data.credentials.IFN_API_KEY) {
             state.credentials = data.credentials;
@@ -230,7 +234,7 @@
       var params = new URLSearchParams({
         email: email,
         name: name,
-        client_id: "gentiq-dashboard",
+        client_id: state.clientId,
         redirect_uri: buildCallbackUrl(),
         state: state.csrfToken
       });
@@ -317,7 +321,7 @@
       showView("exchanging");
       postToParent("setup:exchange", {
         code: data.code,
-        client_id: "gentiq-dashboard",
+        client_id: state.clientId,
         token_url: state.baseUrl + "/auth/api-provision/token"
       });
     });
