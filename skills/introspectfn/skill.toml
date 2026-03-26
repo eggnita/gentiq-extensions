@@ -1,6 +1,6 @@
 [package]
 name = "introspectfn-erp"
-version = "0.2.0"
+version = "0.2.1"
 description = "Virtual accountant skill — ERP analysis, bookkeeping proposals, and financial insights via IntrospectFN"
 author = "Gentiq"
 icon = "📊"
@@ -101,10 +101,12 @@ client_secret = "test-secret"
 # --- Credentials ---
 [credentials]
 required = ["IFN_API_KEY"]
-configurable = ["IFN_BASE_URL"]
+configurable = ["IFN_BASE_URL", "IFN_WEB_URL", "IFN_INSECURE"]
 
 [credentials.defaults]
 IFN_BASE_URL = "https://ifn-stage.mayuda.com"
+IFN_WEB_URL = "https://ifn-stage.mayuda.com"
+IFN_INSECURE = "true"
 
 # --- Cron Jobs ---
 [[cron]]
@@ -143,6 +145,6 @@ refresh_interval = 3600
 # --- Permissions ---
 [permissions]
 network = ["ifn-stage.mayuda.com:443"]
-tools = ["ifn"]
+tools = ["ifn", "ifn link"]
 cron = true
 setup_ui = true

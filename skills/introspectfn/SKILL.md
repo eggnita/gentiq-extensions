@@ -31,8 +31,14 @@ ifn <command> [subcommand] [options]
 | `ifn dashboard <connection_id>` | Dashboard metrics for a company |
 | `ifn browse <connection_id> <resource>` | Browse live ERP records |
 | `ifn browse <connection_id> <resource> <id>` | Get a specific ERP record |
+| `ifn browse <connection_id> account-info <number>` | Get account description by number |
+| `ifn browse <connection_id> fileconnections --entity <type>` | List file attachments for an entity |
+| `ifn browse <connection_id> file-counts --entity <type>` | Batch file-connection counts |
+| `ifn browse <connection_id> archive <file_id>` | Download an archive file |
+| `ifn browse <connection_id> inbox [folder_id]` | List ERP inbox or folder contents |
 | `ifn records <connection_id> <doc_type>` | Browse locally synced records |
 | `ifn records <connection_id> <doc_type> <id>` | Get a specific synced record |
+| `ifn records <connection_id> files` | List synced file attachments |
 | `ifn analysis accounts <connection_id>` | Vouchers grouped by account |
 | `ifn analysis balances <connection_id> <account>` | Account balance across years |
 | `ifn analysis integrity <connection_id>` | Data integrity check |
@@ -40,6 +46,8 @@ ifn <command> [subcommand] [options]
 | `ifn sync status <connection_id>` | Check sync status |
 | `ifn sync overview` | Global sync status across companies |
 | `ifn sync years <connection_id>` | List financial years |
+| `ifn sync trigger <connection_id>` | Trigger ERP sync (accountant+) |
+| `ifn sync cancel <connection_id> <job_id>` | Cancel a running sync job |
 | `ifn staging list <connection_id>` | List staged actions for a company |
 | `ifn staging list-all` | List all staged actions across companies |
 | `ifn staging get <action_id>` | Get details of a staged action |
@@ -49,6 +57,61 @@ ifn <command> [subcommand] [options]
 | `ifn staging reject <action_id>` | Withdraw own staged action |
 | `ifn staging next-number <connection_id>` | Get predicted next voucher number |
 | `ifn staging upload <connection_id> <file>` | Upload file for attachment |
+| `ifn staging write-windows <connection_id>` | List write windows for a company |
+| `ifn link <type> <connection_id> [args]` | Generate deep link to web app |
+
+## Deep Linking
+
+When referring to specific ERP entities (vouchers, invoices, staging actions, etc.) in your responses, **always include a deep link** so the user can click through to the IntrospectFN web app. Use the `ifn link` command to generate URLs.
+
+### Common Deep Link Patterns
+
+```bash
+# Voucher detail (include financial year for correct lookup)
+ifn link voucher <conn_id> A 42 --fy 6
+# → https://ifn-stage.mayuda.com/company/<conn_id>/vouchers/A/42?financialyear=6
+
+# Invoice detail
+ifn link invoice <conn_id> 1234
+# → https://ifn-stage.mayuda.com/company/<conn_id>/invoices/1234
+
+# Supplier invoice detail
+ifn link supplier-invoice <conn_id> 567
+# → https://ifn-stage.mayuda.com/company/<conn_id>/supplierinvoices/567
+
+# Staging action
+ifn link staging <conn_id> 15
+# → https://ifn-stage.mayuda.com/company/<conn_id>/staging/15
+
+# Account analysis with filters
+ifn link account-analysis <conn_id> --account 6110 --from 2025-01-01 --to 2025-12-31
+
+# Voucher list with date filter
+ifn link vouchers <conn_id> --fy 6 --from 2025-06-01 --to 2025-06-30
+
+# Integrity check page
+ifn link integrity <conn_id>
+```
+
+### When to Include Deep Links
+
+- **Always** when mentioning a specific voucher, invoice, or supplier invoice by number
+- **Always** when referring to a staging proposal (link to the staging action detail)
+- **Always** when reporting integrity issues (link to the integrity page)
+- When suggesting the user review an account (link to account analysis with filters)
+- When listing multiple items, include links for the most relevant ones (not every row)
+
+### Format in Responses
+
+Use markdown links in your messages:
+
+```markdown
+Found duplicate invoice: [Invoice #67890](https://ifn-stage.mayuda.com/company/abc-123/invoices/67890)
+was booked as [Voucher A-42](https://ifn-stage.mayuda.com/company/abc-123/vouchers/A/42?financialyear=6)
+and [Voucher A-48](https://ifn-stage.mayuda.com/company/abc-123/vouchers/A/48?financialyear=6).
+
+I've created a correction proposal: [Staging #15](https://ifn-stage.mayuda.com/company/abc-123/staging/15)
+```
 
 ## Standard Workflow
 
@@ -90,6 +153,197 @@ ifn staging propose <connection_id> <json_file>
 ```
 
 The JSON file should contain a staging action with all required fields. See the "Proposing Vouchers" section below.
+
+## Working with File Attachments
+
+Fortnox entities (vouchers, invoices, supplier invoices) can have file attachments — typically scanned invoices, receipts, or contracts. The skill provides tools to discover, list, and reference these files.
+
+### Finding Attachments for a Specific Entity
+
+To check what files are attached to a voucher, invoice, or supplier invoice:
+
+```bash
+# List files attached to a specific invoice
+ifn browse <conn_id> fileconnections --entity invoices --number 1234
+
+# List files attached to a voucher (requires series and financial year)
+ifn browse <conn_id> fileconnections --entity vouchers --number 42 --series A --fy 6
+
+# List files attached to a supplier invoice
+ifn browse <conn_id> fileconnections --entity supplierinvoices --number 567
+```
+
+This returns a list of `FileConnection` objects, each with a `file_id`, `name`, and `source`.
+
+### Counting Attachments in Bulk
+
+To see how many files are attached across all records of a given type:
+
+```bash
+# Get file counts for all invoices
+ifn browse <conn_id> file-counts --entity invoices
+
+# Get file counts for vouchers in a specific financial year
+ifn browse <conn_id> file-counts --entity vouchers --fy 6
+```
+
+Returns `{record_number: file_count}` — useful for spotting invoices or vouchers that are missing documentation.
+
+### Browsing Synced Files
+
+To search across all locally synced file attachments:
+
+```bash
+# List all synced files
+ifn records <conn_id> files
+
+# Filter by document type
+ifn records <conn_id> files --doc-type invoices
+
+# Search by filename
+ifn records <conn_id> files --search "receipt"
+```
+
+### Downloading a File
+
+To download an archive file by its `file_id` (obtained from `fileconnections`):
+
+```bash
+ifn browse <conn_id> archive <file_id>
+```
+
+This streams the binary file content. Note: the CLI outputs raw binary — this is mainly useful for verification, not for display.
+
+### ERP Inbox
+
+The Fortnox inbox contains unprocessed documents (uploaded scans, emailed invoices, etc.):
+
+```bash
+# List inbox root
+ifn browse <conn_id> inbox
+
+# List a specific folder
+ifn browse <conn_id> inbox <folder_id>
+```
+
+### Attaching Files to Staging Proposals
+
+When proposing a voucher that should have file attachments:
+
+1. **Upload the file** first:
+   ```bash
+   ifn staging upload <conn_id> /path/to/invoice.pdf
+   ```
+   This returns a `file_id` and `filename`.
+
+2. **Reference the file** in the staging proposal using the `file_refs` field:
+   ```json
+   {
+     "entity_type": "voucher",
+     "action": "create",
+     "payload": { ... },
+     "file_refs": ["<file_id from upload>"],
+     "accounting_reasoning": "...",
+     "notes": "..."
+   }
+   ```
+
+When the staged action is executed, the file connection is created in Fortnox automatically.
+
+### Deep Links for Files
+
+Include links to the web app when referencing files:
+
+```bash
+# Link to a specific file
+ifn link file <conn_id> <file_id>
+
+# Link to the files browser
+ifn link files <conn_id> --doc-type invoices
+```
+
+### Source Document Verification
+
+**CRITICAL: Never assume that booked ERP data matches the source document.** The attached file (scanned invoice, receipt, contract) is the ground truth. The ERP entry is a human's or system's interpretation of that document, and it can be wrong.
+
+When analyzing entries, always consider that the booked data may differ from the actual document in:
+
+- **Amounts** — transposition errors, wrong currency, incorrect VAT calculation
+- **Dates** — invoice date vs. booking date vs. due date mismatches
+- **Supplier/customer** — booked under wrong party
+- **Account classification** — expense type misread from the document
+- **VAT rates** — wrong rate applied (25% vs 12% vs 6% vs exempt)
+- **Description** — vague or misleading description that doesn't match the document
+
+#### Verification Workflow
+
+When investigating a specific entry — especially for corrections or anomaly reports — follow this process:
+
+1. **Get the booked data** from ERP:
+   ```bash
+   ifn browse <conn_id> invoices 1234
+   # or
+   ifn browse <conn_id> vouchers A/42 --fy 6
+   ```
+
+2. **Check if a source file exists**:
+   ```bash
+   ifn browse <conn_id> fileconnections --entity invoices --number 1234
+   ```
+
+3. **Retrieve and examine the file** (if attached):
+   ```bash
+   ifn browse <conn_id> archive <file_id>
+   ```
+
+4. **Cross-reference** the file content against the booked data. Look for discrepancies in:
+   - Total amount and line item amounts
+   - VAT amount and rate
+   - Invoice number, date, and due date
+   - Supplier/customer name and org number
+   - Description of goods/services
+
+5. **Report findings** clearly, distinguishing between:
+   - **What the document says** (source of truth)
+   - **What the ERP shows** (may contain errors)
+   - **The discrepancy** (specific difference)
+
+#### How to Report Discrepancies
+
+When you find a mismatch between a file and booked data, report it explicitly:
+
+```markdown
+**Document vs. ERP Discrepancy Found**
+
+| Field | Source Document | Booked in ERP | Discrepancy |
+|-------|----------------|---------------|-------------|
+| Total amount | 12 500 SEK | 12 050 SEK | 450 SEK difference |
+| VAT (25%) | 2 500 SEK | 2 410 SEK | Follows from amount error |
+| Invoice date | 2025-06-10 | 2025-06-01 | 9 days off |
+
+Source: [Invoice #1234 PDF](link-to-file) vs [Voucher A-42](link-to-voucher)
+```
+
+When the discrepancy leads to a correction proposal, reference it in the accounting reasoning and it should directly affect the confidence assessment:
+
+- **File matches ERP exactly** → supports high confidence (95%+)
+- **Minor discrepancy** (e.g., description wording) → note it, confidence stays high
+- **Amount or account discrepancy** → correction needed, confidence depends on clarity of the source document
+- **No file attached** → flag as missing documentation, lower confidence for any assumptions about the original transaction
+- **File is unreadable or ambiguous** → state this explicitly, reduce confidence accordingly
+
+#### Missing Documentation
+
+When an entry has no attached source document, flag it:
+
+```markdown
+**Missing Documentation**: [Invoice #5678](link) has no attached file.
+Cannot verify the booked amount (8 000 SEK) or VAT classification against
+the original document. Recommend obtaining the source invoice before approving
+any corrections.
+```
+
+Entries without source documents should generally receive lower confidence scores in any proposed corrections, since the booked data cannot be independently verified.
 
 ## Proposing Vouchers
 
@@ -237,11 +491,17 @@ Calculate certainty based on evidence quality:
 | **50-69%** | Limited evidence | Significant assumptions, incomplete source data |
 | **<50%** | High uncertainty | Major judgment calls, novel situations — flag prominently |
 
-**High confidence indicators** (90%+): identical data matches, mathematical verification, clear regulatory procedures, no ambiguity in source documents.
+**High confidence indicators** (90%+): identical data matches, mathematical verification, clear regulatory procedures, no ambiguity in source documents, **source file verified and matches booked data**.
 
-**Medium confidence indicators** (70-89%): strong supporting evidence, industry best practices apply, limited alternatives, some judgment on account classification.
+**Medium confidence indicators** (70-89%): strong supporting evidence, industry best practices apply, limited alternatives, some judgment on account classification, **source file exists but minor discrepancies noted**.
 
-**Low confidence indicators** (<70%): incomplete information, multiple valid approaches, significant assumptions, novel/unusual transactions. Always flag these explicitly and recommend human review before approval.
+**Low confidence indicators** (<70%): incomplete information, multiple valid approaches, significant assumptions, novel/unusual transactions, **no source file attached or file contradicts booked data**. Always flag these explicitly and recommend human review before approval.
+
+**Source document impact on confidence:**
+- File attached + verified match → no confidence penalty
+- File attached + discrepancy found → confidence based on file (the truth), not the ERP data
+- No file attached → reduce confidence by 10-15% for any assumption about the original transaction
+- File unreadable or ambiguous → state explicitly, treat as partial evidence only
 
 ### Complexity Classification
 
@@ -281,6 +541,7 @@ For proposals with risk MEDIUM or higher, explicitly state what could go wrong a
 7. **Respect financial years.** Vouchers must target the correct financial year and fall within valid date ranges.
 8. **Report, don't assume.** If data looks wrong, report it and suggest investigation — don't silently "fix" it.
 9. **Be honest about confidence.** Never inflate certainty to make a proposal look better. If you're unsure, say so — a well-calibrated 70% is more valuable than a false 95%.
+10. **Never trust booked data blindly.** ERP data is a human's interpretation of source documents. When a file is attached, treat the file as the source of truth and cross-reference it against the booked entry. When no file is attached, note the missing documentation and lower your confidence accordingly.
 
 ## Response Guidelines
 
@@ -296,7 +557,11 @@ For proposals with risk MEDIUM or higher, explicitly state what could go wrong a
 
 This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or developer in the IntrospectFN web UI. The key is scoped to the `assistant` role. It is configured as a credential in the GentiqOS admin dashboard when the skill is pushed to a Gent.
 
-The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.1.0` for audit trail.
+The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.1` for audit trail.
+
+### SSL Certificate Validation
+
+If the API server uses a self-signed or invalid SSL certificate, set `IFN_INSECURE=true` in the environment or config file, or pass `--insecure` on the command line. This skips TLS certificate validation for all API requests.
 
 ### Key Rotation
 

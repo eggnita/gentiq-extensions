@@ -357,7 +357,7 @@ These proxy requests to the Fortnox API through the backend's rate-limited clien
 | GET | `…/{connection_id}/external/{resource}` | Yes | List a resource (paginated) |
 | GET | `…/{connection_id}/external/{resource}/{path}` | Yes | Get a single resource record |
 | GET | `…/{connection_id}/accounts/{account_number}` | Yes | Get account description |
-| GET | `…/{connection_id}/fileconnections` | Yes | File attachments (`?entity_type&entity_id`) |
+| GET | `…/{connection_id}/fileconnections` | Yes | File attachments (`?entity&number&series&financialyear`) |
 | GET | `…/{connection_id}/archive/{file_id}` | Yes | Download archive file (binary) |
 | GET | `…/{connection_id}/fileconnection-counts` | Yes | Batch file-attachment counts |
 | GET | `…/{connection_id}/inbox` | Yes | List ERP inbox |
@@ -384,9 +384,10 @@ The sync system downloads ERP data into a local database for fast offline access
 | GET | `…/{connection_id}/internal/accounts/{number}/year-balances` | Yes | any | Account balance across years |
 | GET | `…/{connection_id}/internal/integrity` | Yes | any | Data integrity check |
 | GET | `…/{connection_id}/internal/voucherseries-map` | Yes | any | Voucher series mapping |
+| GET | `…/{connection_id}/internal/files` | Yes | any | List synced file attachments |
 | GET | `…/{connection_id}/internal/{doc_type}` | Yes | any | List local records |
 | GET | `…/{connection_id}/internal/{doc_type}/{record_id}` | Yes | any | Get a single local record |
-| POST | `…/{connection_id}/internal/{doc_type}/{record_id}/refresh` | Yes | any | Re-fetch a record from ERP |
+| POST | `…/{connection_id}/internal/{doc_type}/{record_id}/refresh` | Yes | accountant+ | Re-fetch a record from ERP |
 | GET | `/api/sync/overview` | Yes | any | Global sync status across companies |
 
 **Sync request body** (`POST …/{connection_id}/sync`):
@@ -404,6 +405,17 @@ The sync system downloads ERP data into a local database for fast offline access
 `mode`: `full` (re-sync everything), `incremental` (default), or `enrich_only` (fetch detail for stubs only).
 
 **Synced doc types:** `vouchers`, `invoices`, `supplierinvoices`, `customers`, `suppliers`, `accounts`, `financialyears`, `voucherseries`
+
+**Synced file attachments** (`GET …/{connection_id}/internal/files`):
+
+Lists file references from `erp_file_refs` with pagination.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `page` | 1 | Page number |
+| `limit` | 100 | Records per page |
+| `doc_type` | "" | Filter by document type |
+| `search` | "" | Search query |
 
 ### 5.8 Staging (Bookkeeping Actions)
 
@@ -558,7 +570,9 @@ All endpoints require `is_developer = true`. Per-company paths prefixed with `/a
 | GET | `…/{company_id}/copy-jobs` | List copy jobs |
 | GET | `/api/developer/copy-jobs/{job_id}` | Get copy job status |
 | POST | `/api/developer/copy-jobs/{job_id}/cancel` | Cancel a copy job |
+| POST | `/api/developer/copy-jobs/{job_id}/resume` | Resume a failed/cancelled copy job |
 | POST | `…/{company_id}/purge-sandbox` | Purge file connections from sandbox |
+| POST | `…/{company_id}/purge-voucher-series` | Delete vouchers from a sandbox series (highest first) |
 
 **Notifications:**
 
@@ -644,6 +658,7 @@ Rate limiting is server-side. Clients do not need their own throttling.
 | `RoleUpdate` | `role` (str) |
 | `CopyRequest` | `doc_types` (str[]), `financial_year_ids` (str[]) |
 | `PurgeSandboxRequest` | `targets` (str[]) |
+| `PurgeVoucherSeriesRequest` | `series` (str), `financial_year` (str), `down_to` (int, default 1) |
 | `LinkSandboxRequest` | `sandbox_company_id` (int) |
 
 ### Response Schemas

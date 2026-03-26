@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # config.sh — Configuration loading and defaults
 
-IFN_VERSION="0.1.0"
+IFN_VERSION="0.2.1"
 IFN_USER_AGENT="introspect-cli/${IFN_VERSION}"
 
 # Defaults
 IFN_BASE_URL="${IFN_BASE_URL:-http://localhost:8000}"
+IFN_WEB_URL="${IFN_WEB_URL:-}"
 IFN_API_KEY="${IFN_API_KEY:-}"
+IFN_INSECURE="${IFN_INSECURE:-false}"
 IFN_CONFIG="${IFN_CONFIG:-${HOME}/.ifn/config}"
 
 ifn_load_config() {
@@ -18,14 +20,22 @@ ifn_load_config() {
             [ -z "$key" ] && continue
             [[ "$key" == \#* ]] && continue
             case "$key" in
-                IFN_BASE_URL) IFN_BASE_URL="${IFN_BASE_URL:-$value}" ;;
-                IFN_API_KEY)  IFN_API_KEY="${IFN_API_KEY:-$value}" ;;
+                IFN_BASE_URL)  IFN_BASE_URL="${IFN_BASE_URL:-$value}" ;;
+                IFN_WEB_URL)   IFN_WEB_URL="${IFN_WEB_URL:-$value}" ;;
+                IFN_API_KEY)   IFN_API_KEY="${IFN_API_KEY:-$value}" ;;
+                IFN_INSECURE)  IFN_INSECURE="${IFN_INSECURE:-$value}" ;;
             esac
         done < "$IFN_CONFIG"
     fi
 
-    # Strip trailing slash from base URL
+    # Strip trailing slashes
     IFN_BASE_URL="${IFN_BASE_URL%/}"
+    IFN_WEB_URL="${IFN_WEB_URL%/}"
 
-    export IFN_BASE_URL IFN_API_KEY IFN_USER_AGENT IFN_VERSION
+    # Default web URL to base URL if not set (same origin deployment)
+    if [ -z "$IFN_WEB_URL" ]; then
+        IFN_WEB_URL="$IFN_BASE_URL"
+    fi
+
+    export IFN_BASE_URL IFN_WEB_URL IFN_API_KEY IFN_INSECURE IFN_USER_AGENT IFN_VERSION
 }

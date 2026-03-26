@@ -8,28 +8,30 @@ cmd_staging() {
     shift 2>/dev/null || true
 
     case "$subcmd" in
-        list)        _staging_list "$@" ;;
-        list-all)    _staging_list_all "$@" ;;
-        get)         _staging_get "$@" ;;
-        propose)     _staging_propose "$@" ;;
-        edit)        _staging_edit "$@" ;;
-        clone)       _staging_clone "$@" ;;
-        reject)      _staging_reject "$@" ;;
-        next-number) _staging_next_number "$@" ;;
-        upload)      _staging_upload "$@" ;;
+        list)           _staging_list "$@" ;;
+        list-all)       _staging_list_all "$@" ;;
+        get)            _staging_get "$@" ;;
+        propose)        _staging_propose "$@" ;;
+        edit)           _staging_edit "$@" ;;
+        clone)          _staging_clone "$@" ;;
+        reject)         _staging_reject "$@" ;;
+        next-number)    _staging_next_number "$@" ;;
+        upload)         _staging_upload "$@" ;;
+        write-windows)  _staging_write_windows "$@" ;;
         --help|-h|"")
             echo "Usage: ifn staging <subcommand> [options]"
             echo ""
             echo "Subcommands:"
-            echo "  list         <conn_id>                List staged actions for a company"
-            echo "  list-all                              List all staged actions across companies"
-            echo "  get          <action_id>              Get details of a staged action"
-            echo "  propose      <conn_id> <json_file>    Propose a new staging action"
-            echo "  edit         <action_id> <json_file>  Edit own staged action (payload, notes, reasoning)"
-            echo "  clone        <action_id>              Clone a staged action"
-            echo "  reject       <action_id>              Reject own staged action"
-            echo "  next-number  <conn_id> [options]      Get predicted next voucher number"
-            echo "  upload       <conn_id> <file_path>    Upload a file for attachment"
+            echo "  list          <conn_id>                List staged actions for a company"
+            echo "  list-all                               List all staged actions across companies"
+            echo "  get           <action_id>              Get details of a staged action"
+            echo "  propose       <conn_id> <json_file>    Propose a new staging action"
+            echo "  edit          <action_id> <json_file>  Edit own staged action (payload, notes, reasoning)"
+            echo "  clone         <action_id>              Clone a staged action"
+            echo "  reject        <action_id>              Reject own staged action"
+            echo "  next-number   <conn_id> [options]      Get predicted next voucher number"
+            echo "  upload        <conn_id> <file_path>    Upload a file for attachment"
+            echo "  write-windows <conn_id>                List write windows for a company"
             echo ""
             echo "Next-number options:"
             echo "  --series <code>   Voucher series (default: A)"
@@ -166,5 +168,14 @@ _staging_upload() {
 
     local result
     result=$(ifn_upload "/api/companies/${conn_id}/staging/upload-file" "$file_path") || return 1
+    ifn_output "$result"
+}
+
+_staging_write_windows() {
+    ifn_require_arg "${1:-}" "connection_id" "ifn staging write-windows <connection_id>"
+    local conn_id="$1"
+
+    local result
+    result=$(ifn_get "/api/companies/${conn_id}/write-windows") || return 1
     ifn_output "$result"
 }

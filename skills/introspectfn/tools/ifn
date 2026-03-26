@@ -24,6 +24,8 @@ source "${IFN_CLI_DIR}/lib/http.sh"
 source "${IFN_CLI_DIR}/lib/format.sh"
 # shellcheck source=ifn-cli/lib/auth.sh
 source "${IFN_CLI_DIR}/lib/auth.sh"
+# shellcheck source=ifn-cli/lib/deeplink.sh
+source "${IFN_CLI_DIR}/lib/deeplink.sh"
 
 # Load config
 ifn_load_config
@@ -43,19 +45,23 @@ Commands:
   browse     <conn_id> <resource> [id]  Browse live ERP records
   records    <conn_id> <doc_type> [id]  Browse synced local records
   analysis   accounts|balances|integrity|series  Financial analysis
-  sync       status|overview|years               Sync status (read-only)
-  staging    list|list-all|get|propose|next-number  Staging workflow
+  sync       status|overview|years|trigger|cancel  Sync management
+  staging    list|list-all|get|propose|write-windows  Staging workflow
   auth       status|rotate                      API key status and rotation
+  link       <type> <conn_id> [args]           Generate web app deep links
   version                         Show CLI version
 
 Options:
   --help, -h     Show this help
   --json         Raw JSON output (no formatting)
   --verbose, -v  Verbose output
+  --insecure     Skip SSL certificate validation
 
 Environment:
   IFN_BASE_URL   API base URL (default: http://localhost:8000)
   IFN_API_KEY    API key (Bearer token, issued in IntrospectFN web UI)
+  IFN_INSECURE   Skip SSL cert validation (true/false, default: false)
+  IFN_WEB_URL    Web app URL for deep links (default: IFN_BASE_URL)
 
 Examples:
   ifn health
@@ -67,7 +73,7 @@ USAGE
 }
 
 ifn_version() {
-    echo "ifn 0.1.0 (IntrospectFN CLI)"
+    echo "ifn 0.2.1 (IntrospectFN CLI)"
 }
 
 # Parse global flags
@@ -79,6 +85,7 @@ for arg in "$@"; do
     case "$arg" in
         --json) IFN_RAW_JSON=true ;;
         --verbose|-v) IFN_VERBOSE=true ;;
+        --insecure) IFN_INSECURE=true ;;
         --help|-h)
             if [ ${#ARGS[@]} -eq 0 ]; then
                 ifn_usage
@@ -89,7 +96,7 @@ for arg in "$@"; do
         *) ARGS+=("$arg") ;;
     esac
 done
-export IFN_RAW_JSON IFN_VERBOSE
+export IFN_RAW_JSON IFN_VERBOSE IFN_INSECURE
 
 set -- "${ARGS[@]+"${ARGS[@]}"}"
 
@@ -138,6 +145,10 @@ case "$COMMAND" in
     auth)
         source "${IFN_CLI_DIR}/commands/auth.sh"
         cmd_auth "$@"
+        ;;
+    link)
+        source "${IFN_CLI_DIR}/commands/link.sh"
+        cmd_link "$@"
         ;;
     version|--version)
         ifn_version

@@ -38,6 +38,11 @@ ifn_http() {
         -H "X-Bot-Client: ${IFN_USER_AGENT}"
     )
 
+    # Skip SSL certificate validation when configured
+    if [ "$IFN_INSECURE" = "true" ]; then
+        curl_args+=(-k)
+    fi
+
     # API key auth (Bearer token)
     if [ -n "$IFN_API_KEY" ]; then
         curl_args+=(-H "Authorization: Bearer ${IFN_API_KEY}")
@@ -143,6 +148,11 @@ ifn_upload() {
         -H "X-Bot-Client: ${IFN_USER_AGENT}"
         -F "file=@${file_path}"
     )
+
+    # Skip SSL certificate validation when configured
+    if [ "$IFN_INSECURE" = "true" ]; then
+        curl_args+=(-k)
+    fi
 
     if [ -n "$IFN_API_KEY" ]; then
         curl_args+=(-H "Authorization: Bearer ${IFN_API_KEY}")

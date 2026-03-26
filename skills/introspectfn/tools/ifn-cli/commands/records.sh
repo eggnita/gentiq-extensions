@@ -10,6 +10,9 @@ cmd_records() {
         echo "Doc types: vouchers, invoices, supplierinvoices, customers,"
         echo "  suppliers, accounts, financialyears, voucherseries"
         echo ""
+        echo "Special subcommands:"
+        echo "  files [--doc-type <type>] [--search <q>]  List synced file attachments"
+        echo ""
         echo "Options:"
         echo "  --page <n>           Page number"
         echo "  --limit <n>          Records per page"
@@ -24,6 +27,12 @@ cmd_records() {
     local conn_id="$1"
     local doc_type="$2"
     shift 2
+
+    # Dispatch special subcommand
+    if [ "$doc_type" = "files" ]; then
+        _records_files "$conn_id" "$@"
+        return
+    fi
 
     # Check for record ID
     local record_id=""
@@ -62,6 +71,38 @@ cmd_records() {
     [ -n "$limit" ] && qs="${qs}&limit=${limit}"
     [ "$include_staged" = "true" ] && qs="${qs}&include_staged=true"
 
+    if [ -n "$qs" ]; then
+        path="${path}?${qs:1}"
+    fi
+
+    local result
+    result=$(ifn_get "$path") || return 1
+    ifn_output "$result"
+}
+
+# List synced file attachments
+_records_files() {
+    local conn_id="$1"
+    shift
+
+    local page="" limit="" doc_type="" search=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --page)      page="$2"; shift 2 ;;
+            --limit)     limit="$2"; shift 2 ;;
+            --doc-type)  doc_type="$2"; shift 2 ;;
+            --search)    search="$2"; shift 2 ;;
+            *)           shift ;;
+        esac
+    done
+
+    local qs=""
+    [ -n "$page" ] && qs="${qs}&page=${page}"
+    [ -n "$limit" ] && qs="${qs}&limit=${limit}"
+    [ -n "$doc_type" ] && qs="${qs}&doc_type=${doc_type}"
+    [ -n "$search" ] && qs="${qs}&search=${search}"
+
+    local path="/api/companies/${conn_id}/internal/files"
     if [ -n "$qs" ]; then
         path="${path}?${qs:1}"
     fi
