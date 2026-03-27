@@ -569,7 +569,7 @@ This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or 
 
 **All credentials are pre-configured automatically.** When this skill is pushed to a Gent, the GentiqOS admin dashboard sets `IFN_API_KEY` and `IFN_BASE_URL` as environment variables via the credential system. The OAuth provisioning flow (setup UI) handles key issuance. **You should never need to ask the user for API keys or URLs — just run `ifn` commands directly.**
 
-The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.3` for audit trail.
+The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.4` for audit trail.
 
 ### SSL Certificate Validation
 
