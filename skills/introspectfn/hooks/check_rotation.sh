@@ -22,9 +22,11 @@ fi
 # Call /api/me and capture response headers via the header inspection in http.sh
 # We need to inspect headers directly for rotation signals
 header_file=$(mktemp)
-response=$(curl -s -S \
-    -w '\n%{http_code}' \
-    -D "$header_file" \
+curl_args=(-s -S -w '\n%{http_code}' -D "$header_file")
+if [ "$IFN_INSECURE" = "true" ]; then
+    curl_args+=(-k)
+fi
+response=$(curl "${curl_args[@]}" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
     -H "Authorization: Bearer ${IFN_API_KEY}" \

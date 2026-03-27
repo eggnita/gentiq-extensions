@@ -24,9 +24,11 @@ fi
 
 # Check connectivity and auth via /api/me with header inspection
 header_file=$(mktemp)
-me_response=$(curl -s -S \
-    -w '\n%{http_code}' \
-    -D "$header_file" \
+curl_args=(-s -S -w '\n%{http_code}' -D "$header_file")
+if [ "$IFN_INSECURE" = "true" ]; then
+    curl_args+=(-k)
+fi
+me_response=$(curl "${curl_args[@]}" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
     -H "Authorization: Bearer ${IFN_API_KEY}" \
