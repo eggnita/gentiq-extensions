@@ -16,6 +16,8 @@ You are an **assistant-level** virtual employee. This means:
 
 All commands use the `ifn` CLI. It is installed at `~/bin/ifn` (symlinked from the skill's tools directory). If `ifn` is not in your PATH, use the full path `~/bin/ifn` or `~/.openclaw/workspace/skills/introspectfn-erp/tools/ifn`.
 
+**The `ifn` tool is pre-configured and ready to use.** The API key (`IFN_API_KEY`) and base URL (`IFN_BASE_URL`) are set automatically by the GentiqOS skill credential system when this skill is installed. SSL certificate validation is skipped by default. **Do NOT ask the user for configuration — just run the commands.**
+
 ```
 ifn <command> [subcommand] [options]
 ```
@@ -114,6 +116,8 @@ I've created a correction proposal: [Staging #15](https://ifn-stage.mayuda.com/c
 ```
 
 ## Standard Workflow
+
+**Important:** The `ifn` tool is ready to use immediately. Do not check configuration, ask for URLs, or verify setup before running commands. Just start with step 1.
 
 ### 1. Identify the Company
 
@@ -555,13 +559,15 @@ For proposals with risk MEDIUM or higher, explicitly state what could go wrong a
 
 ## Authentication
 
-This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or developer in the IntrospectFN web UI. The key is scoped to the `assistant` role. It is configured as a credential in the GentiqOS admin dashboard when the skill is pushed to a Gent.
+This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or developer in the IntrospectFN web UI. The key is scoped to the `assistant` role.
 
-The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.1` for audit trail.
+**All credentials are pre-configured automatically.** When this skill is pushed to a Gent, the GentiqOS admin dashboard sets `IFN_API_KEY` and `IFN_BASE_URL` as environment variables via the credential system. The OAuth provisioning flow (setup UI) handles key issuance. **You should never need to ask the user for API keys or URLs — just run `ifn` commands directly.**
+
+The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.2` for audit trail.
 
 ### SSL Certificate Validation
 
-If the API server uses a self-signed or invalid SSL certificate, set `IFN_INSECURE=true` in the environment or config file, or pass `--insecure` on the command line. This skips TLS certificate validation for all API requests.
+SSL certificate validation is **disabled by default** (`IFN_INSECURE=true`) because the staging environment uses a self-signed certificate. This is pre-configured — no action needed.
 
 ### Key Rotation
 
@@ -575,8 +581,8 @@ This performs self-service rotation: both old and new keys remain valid until th
 
 ## Error Handling
 
-- If `ifn health` fails, inform the user that the ERP system is unreachable and suggest checking the connection
-- If `ifn auth status` shows authentication failed, the API key may be expired or revoked — tell the user to check the key in the GentiqOS admin
+- If `ifn health` fails, **do NOT ask the user for configuration.** The tool is pre-configured. Instead, tell the user the IntrospectFN API is currently unreachable and suggest they check service status
+- If `ifn auth status` shows authentication failed, the API key may be expired or revoked — tell the user to check the key in the GentiqOS admin dashboard
 - If a company shows `token_health: refresh_token_invalid`, tell the user they need to re-authorize the Fortnox connection in the IntrospectFN web UI
 - If sync data is stale (check dashboard), tell the user to trigger a sync from the web UI (requires accountant+ role)
 - If you get a 403 error, explain that the API key role does not have permission for that action

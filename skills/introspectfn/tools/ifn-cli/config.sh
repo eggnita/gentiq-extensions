@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # config.sh — Configuration loading and defaults
 
-IFN_VERSION="0.2.1"
+IFN_VERSION="0.2.2"
 IFN_USER_AGENT="introspect-cli/${IFN_VERSION}"
 
-# Defaults
-IFN_BASE_URL="${IFN_BASE_URL:-http://localhost:8000}"
+# Defaults — must match [credentials.defaults] in skill.toml
+IFN_BASE_URL="${IFN_BASE_URL:-https://ifn-stage.mayuda.com}"
 IFN_WEB_URL="${IFN_WEB_URL:-}"
 IFN_API_KEY="${IFN_API_KEY:-}"
-IFN_INSECURE="${IFN_INSECURE:-false}"
+IFN_INSECURE="${IFN_INSECURE:-true}"
 IFN_CONFIG="${IFN_CONFIG:-${HOME}/.ifn/config}"
 
 ifn_load_config() {
