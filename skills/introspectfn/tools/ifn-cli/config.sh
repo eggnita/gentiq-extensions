@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # config.sh — Configuration loading and defaults
 
-IFN_VERSION="0.2.4"
+IFN_VERSION="0.2.5"
 IFN_USER_AGENT="introspect-cli/${IFN_VERSION}"
 
 # Defaults — must match [credentials.defaults] in skill.toml

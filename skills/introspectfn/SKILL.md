@@ -569,7 +569,7 @@ This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or 
 
 **All credentials are pre-configured automatically.** When this skill is pushed to a Gent, the GentiqOS admin dashboard sets `IFN_API_KEY` and `IFN_BASE_URL` as environment variables via the credential system. The OAuth provisioning flow (setup UI) handles key issuance. **You should never need to ask the user for API keys or URLs — just run `ifn` commands directly.**
 
-The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.4` for audit trail.
+The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.5` for audit trail.
 
 ### SSL Certificate Validation
 
@@ -590,10 +590,20 @@ This performs self-service rotation: both old and new keys remain valid until th
 **NEVER ask the user for API keys, URLs, or configuration.** All credentials are injected automatically.
 
 - If `ifn health` fails, the IntrospectFN API is currently unreachable — tell the user and suggest they check service status in the admin dashboard
-- If `ifn auth status` shows "No API key configured":
-  1. **Wait 10 seconds and retry once.** Credential delivery from the dashboard to the runtime can take a few seconds after setup completes (the daemon must poll for the command).
-  2. If it still fails after retry, tell the user: "The API key hasn't been delivered to the runtime yet. Please check the IntrospectFN skill setup status in the GentiqOS admin dashboard and ensure the setup completed successfully."
-  3. **Do NOT ask the user to provide an API key or set environment variables.**
+- If `ifn auth status` shows "No API key configured" or `ifn companies list` fails with an auth error:
+  1. **Wait 15 seconds and retry.** Credential delivery requires the daemon to poll (up to 30 seconds after setup completes).
+  2. If still failing, **load credentials directly from the config file**:
+     ```bash
+     # Check if credentials exist in the config file
+     if [ -f ~/.ifn/config ]; then source ~/.ifn/config; fi
+     # Or extract from openclaw.json as fallback
+     export IFN_API_KEY=$(python3 -c "import json; c=json.load(open('$HOME/.openclaw/openclaw.json')); print(c['skills']['entries']['introspectfn-erp']['env']['IFN_API_KEY'])" 2>/dev/null)
+     export IFN_BASE_URL=$(python3 -c "import json; c=json.load(open('$HOME/.openclaw/openclaw.json')); print(c['skills']['entries']['introspectfn-erp']['env']['IFN_BASE_URL'])" 2>/dev/null)
+     ```
+     Then retry `ifn health` or `ifn companies list`.
+  3. If credentials are found in `openclaw.json` but not in the environment, export them and proceed normally. This is expected behavior — the runtime injects these per-turn but they may not be available during the first conversation after setup.
+  4. If no credentials found anywhere after 30 seconds total, tell the user: "The credentials haven't arrived yet. Please check the IntrospectFN skill setup status in the GentiqOS admin dashboard and ensure setup completed successfully."
+  5. **Do NOT ask the user to provide an API key or set environment variables.**
 - If `ifn auth status` shows "API key rejected", the key may be expired or revoked — tell the user to re-run the IntrospectFN setup in the GentiqOS admin dashboard
 - If a company shows `token_health: refresh_token_invalid`, tell the user they need to re-authorize the Fortnox connection in the IntrospectFN web UI
 - If sync data is stale (check dashboard), tell the user to trigger a sync from the web UI (requires accountant+ role)
