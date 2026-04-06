@@ -20,7 +20,7 @@ _ssl_ctx = ssl.create_default_context()
 _ssl_ctx.check_hostname = False
 _ssl_ctx.verify_mode = ssl.CERT_NONE
 
-IFN_URL = os.environ.get("IFN_BASE_URL", "https://ifn-stage.mayuda.com")
+IFN_URL = os.environ.get("IFN_BASE_URL", "http://localhost:8000")
 CLIENT_ID = "ifn-bot-test"
 CLIENT_SECRET = "test-secret"
 CALLBACK_PATH = "/callback"

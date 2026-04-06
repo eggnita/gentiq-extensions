@@ -17,6 +17,7 @@ cmd_browse() {
         echo "  file-counts --entity <e>      Batch file-connection counts"
         echo "  archive <file_id>             Download an archive file"
         echo "  inbox [folder_id]             List ERP inbox (or folder contents)"
+        echo "  inbox-file <file_id>          Download an inbox file"
         echo ""
         echo "Options (for resource listings):"
         echo "  --page <n>        Page number (default: 1)"
@@ -42,6 +43,7 @@ cmd_browse() {
         file-counts)        _browse_file_counts "$conn_id" "$@"; return ;;
         archive)            _browse_archive "$conn_id" "$@"; return ;;
         inbox)              _browse_inbox "$conn_id" "$@"; return ;;
+        inbox-file)         _browse_inbox_file "$conn_id" "$@"; return ;;
     esac
 
     # Default: external resource proxy
@@ -68,7 +70,11 @@ cmd_browse() {
 
     local path="/api/companies/${conn_id}/external/${resource}"
 
-    if [ -n "$record_id" ]; then
+    if [ -n "$record_id" ] && [ -n "$fy" ]; then
+        # FY-in-path: /external/{resource}/FY-{fy}/{record_id}
+        path="${path}/FY-${fy}/${record_id}"
+        fy=""  # consumed — don't add as query param
+    elif [ -n "$record_id" ]; then
         path="${path}/${record_id}"
     fi
 
@@ -130,7 +136,7 @@ _browse_fileconnections() {
     [ -n "$fy" ] && qs="${qs}&financialyear=${fy}"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/fileconnections?${qs}") || return 1
+    result=$(ifn_get "/api/companies/${conn_id}/external/fileconnections?${qs}") || return 1
     ifn_output "$result"
 }
 
@@ -170,7 +176,19 @@ _browse_archive() {
     local file_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/archive/${file_id}") || return 1
+    result=$(ifn_get "/api/companies/${conn_id}/external/archive/${file_id}") || return 1
+    ifn_output "$result"
+}
+
+# Download an inbox file
+_browse_inbox_file() {
+    local conn_id="$1"
+    shift
+    ifn_require_arg "${1:-}" "file_id" "ifn browse <conn_id> inbox-file <file_id>"
+    local file_id="$1"
+
+    local result
+    result=$(ifn_get "/api/companies/${conn_id}/inbox/file/${file_id}") || return 1
     ifn_output "$result"
 }
 

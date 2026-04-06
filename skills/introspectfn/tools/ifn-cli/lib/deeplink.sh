@@ -17,14 +17,18 @@ ifn_link_company() {
     ifn_web_url "/company/${conn_id}"
 }
 
-# Voucher detail: series + number + financial year
+# Voucher detail: series + number + financial year (FY-in-path)
 ifn_link_voucher() {
     local conn_id="$1"
     local series="$2"
     local number="$3"
     local fy="${4:-}"
-    local url="/company/${conn_id}/vouchers/${series}/${number}"
-    [ -n "$fy" ] && url="${url}?financialyear=${fy}"
+    local url
+    if [ -n "$fy" ]; then
+        url="/company/${conn_id}/vouchers/FY-${fy}/${series}/${number}"
+    else
+        url="/company/${conn_id}/vouchers/${series}/${number}"
+    fi
     ifn_web_url "$url"
 }
 

@@ -4,7 +4,7 @@ Simple bot client to test IntrospectFN API key authentication.
 
 Usage:
   1. Create an API key on staging:
-     - Log in to https://ifn-stage.mayuda.com as owner
+     - Log in to your IntrospectFN instance as owner
      - Go to admin → create a bot key (or use curl below)
 
   2. Save the raw key:
@@ -21,7 +21,7 @@ import json
 import urllib.request
 import urllib.error
 
-BASE_URL = os.environ.get("IFN_BASE_URL", "https://ifn-stage.mayuda.com")
+BASE_URL = os.environ.get("IFN_BASE_URL", "http://localhost:8000")
 API_KEY = os.environ.get("IFN_API_KEY", "")
 
 

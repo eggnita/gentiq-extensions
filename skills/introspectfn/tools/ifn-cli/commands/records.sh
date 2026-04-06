@@ -16,6 +16,7 @@ cmd_records() {
         echo "Options:"
         echo "  --page <n>           Page number"
         echo "  --limit <n>          Records per page"
+        echo "  --fy <id>            Financial year ID (uses FY-in-path for record lookup)"
         echo "  --include-staged     Include staged actions (vouchers only)"
         echo "  --refresh            Re-fetch a specific record from ERP"
         return
@@ -42,11 +43,12 @@ cmd_records() {
     fi
 
     # Parse options
-    local page="" limit="" include_staged="false" refresh="false"
+    local page="" limit="" fy="" include_staged="false" refresh="false"
     while [ $# -gt 0 ]; do
         case "$1" in
             --page)            page="$2"; shift 2 ;;
             --limit)           limit="$2"; shift 2 ;;
+            --fy)              fy="$2"; shift 2 ;;
             --include-staged)  include_staged="true"; shift ;;
             --refresh)         refresh="true"; shift ;;
             *)                 shift ;;
@@ -55,7 +57,16 @@ cmd_records() {
 
     local path="/api/companies/${conn_id}/internal/${doc_type}"
 
-    if [ -n "$record_id" ]; then
+    if [ -n "$record_id" ] && [ -n "$fy" ]; then
+        # FY-in-path: /internal/{doc_type}/FY-{fy}/{record_id}
+        if [ "$refresh" = "true" ]; then
+            local result
+            result=$(ifn_post "${path}/FY-${fy}/${record_id}/refresh") || return 1
+            ifn_output "$result"
+            return
+        fi
+        path="${path}/FY-${fy}/${record_id}"
+    elif [ -n "$record_id" ]; then
         if [ "$refresh" = "true" ]; then
             local result
             result=$(ifn_post "${path}/${record_id}/refresh") || return 1

@@ -11,7 +11,7 @@ IntrospectFN is a multi-tenant bookkeeping introspection platform that connects 
 | Property | Value |
 |----------|-------|
 | Base URL (local) | `http://localhost:8000` |
-| Base URL (staging) | `https://ifn-stage.mayuda.com` |
+| Base URL (staging) | `https://<your-instance-url>` |
 | API prefix | `/api` |
 | Auth prefix | `/auth` |
 | OpenAPI version | 3.1.0 |
@@ -356,9 +356,11 @@ These proxy requests to the Fortnox API through the backend's rate-limited clien
 |--------|------|------|-------------|
 | GET | `…/{connection_id}/external/{resource}` | Yes | List a resource (paginated) |
 | GET | `…/{connection_id}/external/{resource}/{path}` | Yes | Get a single resource record |
+| GET | `…/{connection_id}/external/{resource}/FY-{fy}/{path}` | Yes | Get a resource record (FY-in-path) |
 | GET | `…/{connection_id}/accounts/{account_number}` | Yes | Get account description |
-| GET | `…/{connection_id}/fileconnections` | Yes | File attachments (`?entity&number&series&financialyear`) |
-| GET | `…/{connection_id}/archive/{file_id}` | Yes | Download archive file (binary) |
+| GET | `…/{connection_id}/accounts/FY-{fy}/{account_number}` | Yes | Get account description (FY-in-path) |
+| GET | `…/{connection_id}/external/fileconnections` | Yes | File attachments (`?entity&number&series&financialyear`) |
+| GET | `…/{connection_id}/external/archive/{file_id}` | Yes | Download archive file (binary) |
 | GET | `…/{connection_id}/fileconnection-counts` | Yes | Batch file-attachment counts |
 | GET | `…/{connection_id}/inbox` | Yes | List ERP inbox |
 | GET | `…/{connection_id}/inbox/file/{file_id}` | Yes | Download inbox file (binary) |
@@ -387,7 +389,9 @@ The sync system downloads ERP data into a local database for fast offline access
 | GET | `…/{connection_id}/internal/files` | Yes | any | List synced file attachments |
 | GET | `…/{connection_id}/internal/{doc_type}` | Yes | any | List local records |
 | GET | `…/{connection_id}/internal/{doc_type}/{record_id}` | Yes | any | Get a single local record |
+| GET | `…/{connection_id}/internal/{doc_type}/FY-{fy}/{record_id}` | Yes | any | Get a local record (FY-in-path) |
 | POST | `…/{connection_id}/internal/{doc_type}/{record_id}/refresh` | Yes | accountant+ | Re-fetch a record from ERP |
+| POST | `…/{connection_id}/internal/{doc_type}/FY-{fy}/{record_id}/refresh` | Yes | accountant+ | Re-fetch (FY-in-path) |
 | GET | `/api/sync/overview` | Yes | any | Global sync status across companies |
 
 **Sync request body** (`POST …/{connection_id}/sync`):
@@ -423,21 +427,21 @@ The staging system is the core feature for CLI/bot integration. It implements a 
 
 | Method | Path | Auth | Min role | Description |
 |--------|------|------|----------|-------------|
-| GET | `…/{connection_id}/staging` | Yes | any | List staged actions for a company |
-| POST | `…/{connection_id}/staging` | Yes | assistant+ | Propose a staging action |
-| GET | `…/{connection_id}/staging/next-number` | Yes | any | Predicted next voucher number |
-| POST | `…/{connection_id}/staging/upload-file` | Yes | assistant+ | Upload file (multipart) |
+| GET | `…/{connection_id}/bk-staging` | Yes | any | List staged actions for a company |
+| POST | `…/{connection_id}/bk-staging` | Yes | assistant+ | Propose a staging action |
+| GET | `…/{connection_id}/bk-staging/next-number` | Yes | any | Predicted next voucher number |
+| POST | `…/{connection_id}/bk-staging/upload-file` | Yes | assistant+ | Upload file (multipart) |
 | GET | `…/{connection_id}/write-windows` | Yes | any | List write windows |
 | POST | `…/{connection_id}/write-windows` | Yes | owner | Create a write window |
 | DELETE | `…/{connection_id}/write-windows/{window_id}` | Yes | any | Delete a write window |
-| GET | `/api/staging` | Yes | any | List all staged actions across companies |
-| GET | `/api/staging/{action_id}` | Yes | any | Get a staged action |
-| PATCH | `/api/staging/{action_id}` | Yes | accountant+ or own | Edit action (payload, notes, reasoning) |
-| POST | `/api/staging/{action_id}/approve` | Yes | accountant+ | Approve an action |
-| POST | `/api/staging/{action_id}/reject` | Yes | accountant+ or own | Reject an action |
-| POST | `/api/staging/{action_id}/clone` | Yes | assistant+ | Clone an existing action |
-| POST | `/api/staging/{action_id}/resume` | Yes | accountant+ | Clear `on_hold` flag |
-| POST | `/api/staging/execute` | Yes | accountant+ | Execute a batch of approved actions |
+| GET | `/api/bk-staging` | Yes | any | List all staged actions across companies |
+| GET | `/api/bk-staging/{action_id}` | Yes | any | Get a staged action |
+| PATCH | `/api/bk-staging/{action_id}` | Yes | accountant+ or own | Edit action (payload, notes, reasoning) |
+| POST | `/api/bk-staging/{action_id}/approve` | Yes | accountant+ | Approve an action |
+| POST | `/api/bk-staging/{action_id}/reject` | Yes | accountant+ or own | Reject an action |
+| POST | `/api/bk-staging/{action_id}/clone` | Yes | assistant+ | Clone an existing action |
+| POST | `/api/bk-staging/{action_id}/resume` | Yes | accountant+ | Clear `on_hold` flag |
+| POST | `/api/bk-staging/execute` | Yes | accountant+ | Execute a batch of approved actions |
 
 **Stage action request:**
 
@@ -708,7 +712,7 @@ Rate limiting is server-side. Clients do not need their own throttling.
 | Environment | URL | Notes |
 |-------------|-----|-------|
 | Local dev | `http://localhost:8000` | SQLite, dev-bypass auth |
-| Staging | `https://ifn-stage.mayuda.com` | SQLite on persistent disk |
+| Staging | `https://<your-instance-url>` | SQLite on persistent disk |
 | Production | `https://<customer-domain>` | Per-customer GCP project |
 
 ---
@@ -719,7 +723,7 @@ A typical AI bot (`assistant` role) interaction pattern:
 
 1. **Authenticate** — use API key (`Authorization: Bearer ifn_...`)
 2. **Read data** — browse synced records, run account analysis, check integrity
-3. **Propose** — `POST /api/companies/{conn_id}/staging` with full `accounting_reasoning`
+3. **Propose** — `POST /api/companies/{conn_id}/bk-staging` with full `accounting_reasoning`
 4. **Human review** — accountant reviews in web UI and approves/rejects
-5. **Execute** — human or trusted `accountant` bot calls `POST /api/staging/execute`
+5. **Execute** — human or trusted `accountant` bot calls `POST /api/bk-staging/execute`
 6. **Monitor rotation** — check `X-Key-Rotation-Required` headers, self-rotate when signaled

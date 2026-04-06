@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # config.sh — Configuration loading and defaults
 
-IFN_VERSION="0.2.5"
+IFN_VERSION="0.2.6"
 IFN_USER_AGENT="introspect-cli/${IFN_VERSION}"
 
 # Defaults — must match [credentials.defaults] in skill.toml
-IFN_BASE_URL="${IFN_BASE_URL:-https://ifn-stage.mayuda.com}"
+IFN_BASE_URL="${IFN_BASE_URL:-}"
 IFN_WEB_URL="${IFN_WEB_URL:-}"
 IFN_API_KEY="${IFN_API_KEY:-}"
 IFN_INSECURE="${IFN_INSECURE:-true}"
@@ -31,6 +31,13 @@ ifn_load_config() {
     # Strip trailing slashes
     IFN_BASE_URL="${IFN_BASE_URL%/}"
     IFN_WEB_URL="${IFN_WEB_URL%/}"
+
+    # Require IFN_BASE_URL — no hardcoded default
+    if [ -z "$IFN_BASE_URL" ]; then
+        echo "Error: IFN_BASE_URL is not set." >&2
+        echo "Set it via skill credentials, ~/.ifn/config, or environment variable." >&2
+        return 1
+    fi
 
     # Default web URL to base URL if not set (same origin deployment)
     if [ -z "$IFN_WEB_URL" ]; then

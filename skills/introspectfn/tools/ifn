@@ -58,7 +58,7 @@ Options:
   --insecure     Skip SSL certificate validation
 
 Environment:
-  IFN_BASE_URL   API base URL (default: https://ifn-stage.mayuda.com)
+  IFN_BASE_URL   API base URL (required — set via skill credentials)
   IFN_API_KEY    API key (Bearer token, set by skill credential system)
   IFN_INSECURE   Skip SSL cert validation (default: true)
   IFN_WEB_URL    Web app URL for deep links (default: IFN_BASE_URL)
@@ -73,7 +73,7 @@ USAGE
 }
 
 ifn_version() {
-    echo "ifn 0.2.5 (IntrospectFN CLI)"
+    echo "ifn 0.2.6 (IntrospectFN CLI)"
 }
 
 # Parse global flags

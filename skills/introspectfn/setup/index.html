@@ -84,7 +84,7 @@
     </div>
     <div class="field">
       <label for="base-url">IntrospectFN URL</label>
-      <input type="text" id="base-url" value="https://ifn-stage.mayuda.com">
+      <input type="text" id="base-url" placeholder="https://your-instance.example.com">
     </div>
     <button id="btn-connect" class="btn btn-primary" style="width:100%; margin-top:4px">
       Connect to IntrospectFN
@@ -135,7 +135,7 @@
     var state = {
       gentEmail: "",
       gentName: "",
-      baseUrl: "https://ifn-stage.mayuda.com",
+      baseUrl: "",
       clientId: "ifn-bot-test",
       credentials: {},
       popup: null,
@@ -222,6 +222,10 @@
       }
       if (!name) {
         showError("Please enter the Gent name.");
+        return;
+      }
+      if (!baseUrl) {
+        showError("Please enter the IntrospectFN URL.");
         return;
       }
 

@@ -902,14 +902,14 @@
         }
       }
     },
-    "/api/companies/{connection_id}/fileconnections": {
+    "/api/companies/{connection_id}/external/fileconnections": {
       "get": {
         "tags": [
           "external-erp"
         ],
         "summary": "List file connections",
         "description": "Requires authentication. Lists file attachments for a voucher, invoice, or supplier invoice.",
-        "operationId": "get_file_connections_api_companies__connection_id__fileconnections_get",
+        "operationId": "get_file_connections_api_companies__connection_id__external_fileconnections_get",
         "parameters": [
           {
             "name": "connection_id",
@@ -1002,14 +1002,14 @@
         }
       }
     },
-    "/api/companies/{connection_id}/archive/{file_id}": {
+    "/api/companies/{connection_id}/external/archive/{file_id}": {
       "get": {
         "tags": [
           "external-erp"
         ],
         "summary": "Download archive file",
         "description": "Requires authentication. Streams a binary file from the ERP archive.",
-        "operationId": "get_archive_file_api_companies__connection_id__archive__file_id__get",
+        "operationId": "get_archive_file_api_companies__connection_id__external_archive__file_id__get",
         "parameters": [
           {
             "name": "connection_id",
@@ -2397,14 +2397,14 @@
         }
       }
     },
-    "/api/companies/{connection_id}/staging": {
+    "/api/companies/{connection_id}/bk-staging": {
       "get": {
         "tags": [
           "staging"
         ],
         "summary": "List company staging actions",
         "description": "Requires authentication.",
-        "operationId": "list_company_staging_api_companies__connection_id__staging_get",
+        "operationId": "list_company_staging_api_companies__connection_id__bk_staging_get",
         "parameters": [
           {
             "name": "connection_id",
@@ -2467,7 +2467,7 @@
         ],
         "summary": "Stage a bookkeeping action",
         "description": "Requires authentication. Restricted to owner, accountant, or assistant role.",
-        "operationId": "stage_action_api_companies__connection_id__staging_post",
+        "operationId": "stage_action_api_companies__connection_id__bk_staging_post",
         "parameters": [
           {
             "name": "connection_id",
@@ -2515,14 +2515,14 @@
         }
       }
     },
-    "/api/companies/{connection_id}/staging/next-number": {
+    "/api/companies/{connection_id}/bk-staging/next-number": {
       "get": {
         "tags": [
           "staging"
         ],
         "summary": "Get next voucher number",
         "description": "Requires authentication.",
-        "operationId": "get_next_number_api_companies__connection_id__staging_next_number_get",
+        "operationId": "get_next_number_api_companies__connection_id__bk_staging_next_number_get",
         "parameters": [
           {
             "name": "connection_id",
@@ -2729,14 +2729,14 @@
         }
       }
     },
-    "/api/companies/{connection_id}/staging/upload-file": {
+    "/api/companies/{connection_id}/bk-staging/upload-file": {
       "post": {
         "tags": [
           "staging"
         ],
         "summary": "Upload file to ERP (stage tier)",
         "description": "Requires authentication. Restricted to owner, accountant, or assistant role.",
-        "operationId": "upload_file_api_companies__connection_id__staging_upload_file_post",
+        "operationId": "upload_file_api_companies__connection_id__bk_staging_upload_file_post",
         "parameters": [
           {
             "name": "connection_id",
@@ -2753,7 +2753,7 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Body_upload_file_api_companies__connection_id__staging_upload_file_post"
+                "$ref": "#/components/schemas/Body_upload_file_api_companies__connection_id__bk_staging_upload_file_post"
               }
             }
           }
@@ -2782,14 +2782,14 @@
         }
       }
     },
-    "/api/staging": {
+    "/api/bk-staging": {
       "get": {
         "tags": [
           "staging"
         ],
         "summary": "List all staging actions",
         "description": "Requires authentication.",
-        "operationId": "list_all_staging_api_staging_get",
+        "operationId": "list_all_staging_api_bk_staging_get",
         "parameters": [
           {
             "name": "status",
@@ -2838,14 +2838,14 @@
         }
       }
     },
-    "/api/staging/{action_id}": {
+    "/api/bk-staging/{action_id}": {
       "get": {
         "tags": [
           "staging"
         ],
         "summary": "Get a staging action",
         "description": "Requires authentication.",
-        "operationId": "get_staging_action_api_staging__action_id__get",
+        "operationId": "get_staging_action_api_bk_staging__action_id__get",
         "parameters": [
           {
             "name": "action_id",
@@ -2888,7 +2888,7 @@
         ],
         "summary": "Edit a staged action (assistant+ for own, accountant+ for any)",
         "description": "Requires authentication. Accountant/owner can edit any staged action; assistants can edit their own staged actions.",
-        "operationId": "patch_action_api_staging__action_id__patch",
+        "operationId": "patch_action_api_bk_staging__action_id__patch",
         "parameters": [
           {
             "name": "action_id",
@@ -2936,14 +2936,14 @@
         }
       }
     },
-    "/api/staging/{action_id}/approve": {
+    "/api/bk-staging/{action_id}/approve": {
       "post": {
         "tags": [
           "staging"
         ],
         "summary": "Approve a staging action (accountant+)",
         "description": "Requires authentication. Restricted to owner or accountant role.",
-        "operationId": "approve_action_api_staging__action_id__approve_post",
+        "operationId": "approve_action_api_bk_staging__action_id__approve_post",
         "parameters": [
           {
             "name": "action_id",
@@ -2991,14 +2991,14 @@
         }
       }
     },
-    "/api/staging/{action_id}/reject": {
+    "/api/bk-staging/{action_id}/reject": {
       "post": {
         "tags": [
           "staging"
         ],
         "summary": "Reject a staging action (accountant+ or own staged action)",
         "description": "Requires authentication. Accountant/owner can reject any action; assistants can reject their own staged actions.",
-        "operationId": "reject_action_api_staging__action_id__reject_post",
+        "operationId": "reject_action_api_bk_staging__action_id__reject_post",
         "parameters": [
           {
             "name": "action_id",
@@ -3046,14 +3046,14 @@
         }
       }
     },
-    "/api/staging/{action_id}/clone": {
+    "/api/bk-staging/{action_id}/clone": {
       "post": {
         "tags": [
           "staging"
         ],
         "summary": "Clone an action (assistant+)",
         "description": "Requires authentication. Restricted to owner, accountant, or assistant role. Creates a new 'staged' action from any existing action.",
-        "operationId": "clone_action_api_staging__action_id__clone_post",
+        "operationId": "clone_action_api_bk_staging__action_id__clone_post",
         "parameters": [
           {
             "name": "action_id",
@@ -3091,14 +3091,14 @@
         }
       }
     },
-    "/api/staging/{action_id}/resume": {
+    "/api/bk-staging/{action_id}/resume": {
       "post": {
         "tags": [
           "staging"
         ],
         "summary": "Resume a held action (accountant+)",
         "description": "Requires authentication. Restricted to owner or accountant role.",
-        "operationId": "resume_action_api_staging__action_id__resume_post",
+        "operationId": "resume_action_api_bk_staging__action_id__resume_post",
         "parameters": [
           {
             "name": "action_id",
@@ -3136,14 +3136,14 @@
         }
       }
     },
-    "/api/staging/execute": {
+    "/api/bk-staging/execute": {
       "post": {
         "tags": [
           "staging"
         ],
         "summary": "Execute approved actions (accountant+)",
         "description": "Requires authentication. Restricted to owner or accountant role.",
-        "operationId": "execute_actions_api_staging_execute_post",
+        "operationId": "execute_actions_api_bk_staging_execute_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4571,7 +4571,7 @@
         ],
         "title": "AccountDescriptionResponse"
       },
-      "Body_upload_file_api_companies__connection_id__staging_upload_file_post": {
+      "Body_upload_file_api_companies__connection_id__bk_staging_upload_file_post": {
         "properties": {
           "file": {
             "type": "string",
@@ -4583,7 +4583,7 @@
         "required": [
           "file"
         ],
-        "title": "Body_upload_file_api_companies__connection_id__staging_upload_file_post"
+        "title": "Body_upload_file_api_companies__connection_id__bk_staging_upload_file_post"
       },
       "CompanyFlagsResponse": {
         "properties": {

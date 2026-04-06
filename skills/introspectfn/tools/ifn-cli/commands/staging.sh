@@ -49,13 +49,13 @@ _staging_list() {
     local conn_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/staging") || return 1
+    result=$(ifn_get "/api/companies/${conn_id}/bk-staging") || return 1
     ifn_output "$result"
 }
 
 _staging_list_all() {
     local result
-    result=$(ifn_get "/api/staging") || return 1
+    result=$(ifn_get "/api/bk-staging") || return 1
     ifn_output "$result"
 }
 
@@ -64,7 +64,7 @@ _staging_get() {
     local action_id="$1"
 
     local result
-    result=$(ifn_get "/api/staging/${action_id}") || return 1
+    result=$(ifn_get "/api/bk-staging/${action_id}") || return 1
     ifn_output "$result"
 }
 
@@ -90,7 +90,7 @@ _staging_propose() {
     fi
 
     local result
-    result=$(ifn_post "/api/companies/${conn_id}/staging" "$body") || return 1
+    result=$(ifn_post "/api/companies/${conn_id}/bk-staging" "$body") || return 1
     ifn_output "$result"
 }
 
@@ -110,7 +110,7 @@ _staging_edit() {
     body=$(cat "$json_file")
 
     local result
-    result=$(ifn_patch "/api/staging/${action_id}" "$body") || return 1
+    result=$(ifn_patch "/api/bk-staging/${action_id}" "$body") || return 1
     ifn_output "$result"
 }
 
@@ -119,7 +119,7 @@ _staging_clone() {
     local action_id="$1"
 
     local result
-    result=$(ifn_post "/api/staging/${action_id}/clone") || return 1
+    result=$(ifn_post "/api/bk-staging/${action_id}/clone") || return 1
     ifn_output "$result"
 }
 
@@ -128,7 +128,7 @@ _staging_reject() {
     local action_id="$1"
 
     local result
-    result=$(ifn_post "/api/staging/${action_id}/reject") || return 1
+    result=$(ifn_post "/api/bk-staging/${action_id}/reject") || return 1
     ifn_output "$result"
 }
 
@@ -146,7 +146,7 @@ _staging_next_number() {
         esac
     done
 
-    local path="/api/companies/${conn_id}/staging/next-number?series=${series}"
+    local path="/api/companies/${conn_id}/bk-staging/next-number?series=${series}"
     [ -n "$fy" ] && path="${path}&financial_year_id=${fy}"
 
     local result
@@ -167,7 +167,7 @@ _staging_upload() {
     fi
 
     local result
-    result=$(ifn_upload "/api/companies/${conn_id}/staging/upload-file" "$file_path") || return 1
+    result=$(ifn_upload "/api/companies/${conn_id}/bk-staging/upload-file" "$file_path") || return 1
     ifn_output "$result"
 }
 

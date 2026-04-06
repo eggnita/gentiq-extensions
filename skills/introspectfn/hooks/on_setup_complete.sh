@@ -28,7 +28,7 @@ if [ -n "$IFN_API_KEY" ]; then
 # IntrospectFN CLI credentials — written by on_setup_complete hook
 # $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 IFN_API_KEY=${IFN_API_KEY}
-IFN_BASE_URL=${IFN_BASE_URL:-https://ifn-stage.mayuda.com}
+IFN_BASE_URL=${IFN_BASE_URL:-}
 IFN_INSECURE=${IFN_INSECURE:-true}
 CONF
     chmod 600 "$tmp_file"

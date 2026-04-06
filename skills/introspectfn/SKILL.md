@@ -44,6 +44,7 @@ ifn <command> [subcommand] [options]
 | `ifn browse <connection_id> file-counts --entity <type>` | Batch file-connection counts |
 | `ifn browse <connection_id> archive <file_id>` | Download an archive file |
 | `ifn browse <connection_id> inbox [folder_id]` | List ERP inbox or folder contents |
+| `ifn browse <connection_id> inbox-file <file_id>` | Download an inbox file |
 | `ifn records <connection_id> <doc_type>` | Browse locally synced records |
 | `ifn records <connection_id> <doc_type> <id>` | Get a specific synced record |
 | `ifn records <connection_id> files` | List synced file attachments |
@@ -77,19 +78,19 @@ When referring to specific ERP entities (vouchers, invoices, staging actions, et
 ```bash
 # Voucher detail (include financial year for correct lookup)
 ifn link voucher <conn_id> A 42 --fy 6
-# → https://ifn-stage.mayuda.com/company/<conn_id>/vouchers/A/42?financialyear=6
+# → <IFN_WEB_URL>/company/<conn_id>/vouchers/FY-6/A/42
 
 # Invoice detail
 ifn link invoice <conn_id> 1234
-# → https://ifn-stage.mayuda.com/company/<conn_id>/invoices/1234
+# → <IFN_WEB_URL>/company/<conn_id>/invoices/1234
 
 # Supplier invoice detail
 ifn link supplier-invoice <conn_id> 567
-# → https://ifn-stage.mayuda.com/company/<conn_id>/supplierinvoices/567
+# → <IFN_WEB_URL>/company/<conn_id>/supplierinvoices/567
 
 # Staging action
 ifn link staging <conn_id> 15
-# → https://ifn-stage.mayuda.com/company/<conn_id>/staging/15
+# → <IFN_WEB_URL>/company/<conn_id>/staging/15
 
 # Account analysis with filters
 ifn link account-analysis <conn_id> --account 6110 --from 2025-01-01 --to 2025-12-31
@@ -114,11 +115,11 @@ ifn link integrity <conn_id>
 Use markdown links in your messages:
 
 ```markdown
-Found duplicate invoice: [Invoice #67890](https://ifn-stage.mayuda.com/company/abc-123/invoices/67890)
-was booked as [Voucher A-42](https://ifn-stage.mayuda.com/company/abc-123/vouchers/A/42?financialyear=6)
-and [Voucher A-48](https://ifn-stage.mayuda.com/company/abc-123/vouchers/A/48?financialyear=6).
+Found duplicate invoice: [Invoice #67890](<IFN_WEB_URL>/company/abc-123/invoices/67890)
+was booked as [Voucher A-42](<IFN_WEB_URL>/company/abc-123/vouchers/FY-6/A/42)
+and [Voucher A-48](<IFN_WEB_URL>/company/abc-123/vouchers/FY-6/A/48).
 
-I've created a correction proposal: [Staging #15](https://ifn-stage.mayuda.com/company/abc-123/staging/15)
+I've created a correction proposal: [Staging #15](<IFN_WEB_URL>/company/abc-123/staging/15)
 ```
 
 ## Standard Workflow
@@ -569,7 +570,7 @@ This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or 
 
 **All credentials are pre-configured automatically.** When this skill is pushed to a Gent, the GentiqOS admin dashboard sets `IFN_API_KEY` and `IFN_BASE_URL` as environment variables via the credential system. The OAuth provisioning flow (setup UI) handles key issuance. **You should never need to ask the user for API keys or URLs — just run `ifn` commands directly.**
 
-The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.5` for audit trail.
+The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.6` for audit trail.
 
 ### SSL Certificate Validation
 
