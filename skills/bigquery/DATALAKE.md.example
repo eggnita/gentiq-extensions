@@ -1,0 +1,87 @@
+# DATALAKE.md — BigQuery Data Lake Documentation
+
+> **This file is a template.** Copy it to `DATALAKE.md` in the Gent's workspace and fill in the details for your specific data lake. The Gent will consult this file before writing queries to understand your data model.
+
+## Overview
+
+Describe what data lives in BigQuery and its general purpose.
+
+Example:
+> Our BigQuery data lake contains product analytics events, user profiles, and transaction data. It is the source of truth for business metrics and is updated via streaming inserts and daily batch ETL jobs.
+
+## Datasets
+
+| Dataset | Purpose | Update Frequency |
+|---------|---------|-----------------|
+| `analytics` | Product events and user behavior | Real-time streaming |
+| `warehouse` | Transformed business metrics | Daily batch (ETL at 03:00 UTC) |
+| `raw` | Raw ingestion tables | Real-time |
+
+## Key Tables
+
+### analytics.events
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `event_date` | DATE | Partition key — always filter on this |
+| `event_timestamp` | TIMESTAMP | Event time (UTC) |
+| `user_id` | STRING | User identifier |
+| `event_name` | STRING | Event type (e.g., `page_view`, `purchase`) |
+| `event_params` | RECORD (REPEATED) | Key-value event parameters |
+| `device` | RECORD | Device info (category, os, browser) |
+
+- **Partitioned by**: `event_date` (DAY)
+- **Clustered by**: `event_name`, `user_id`
+- **Retention**: 2 years
+- **Gotchas**: `event_params` is a nested repeated field — use `UNNEST()` to access
+
+### warehouse.users
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `user_id` | STRING | Primary key |
+| `email` | STRING | User email (PII — handle carefully) |
+| `created_at` | TIMESTAMP | Registration date |
+| `plan` | STRING | Subscription plan (free, pro, enterprise) |
+| `country` | STRING | ISO country code |
+| `lifetime_value` | FLOAT64 | Calculated LTV in USD |
+
+- **Partitioned by**: None (small table, ~500K rows)
+- **Clustered by**: `plan`, `country`
+
+### warehouse.transactions
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `transaction_id` | STRING | Primary key |
+| `user_id` | STRING | FK to warehouse.users |
+| `amount` | FLOAT64 | Transaction amount in USD |
+| `currency` | STRING | Original currency code |
+| `status` | STRING | completed, pending, refunded, failed |
+| `created_at` | TIMESTAMP | Transaction time |
+| `transaction_date` | DATE | Partition key |
+
+- **Partitioned by**: `transaction_date` (DAY)
+- **Clustered by**: `user_id`, `status`
+
+## Relationships
+
+```
+analytics.events.user_id  →  warehouse.users.user_id
+warehouse.transactions.user_id  →  warehouse.users.user_id
+```
+
+## Query Guidelines
+
+1. **Always filter on partition columns** — `event_date` for events, `transaction_date` for transactions
+2. **Use date ranges** — never scan more than 90 days of events unless specifically needed
+3. **Prefer aggregations** — avoid `SELECT *` on event tables (billions of rows)
+4. **UNNEST for nested fields** — use `UNNEST(event_params) AS param WHERE param.key = 'value'`
+5. **Join order** — join small tables (users) to large tables (events), not the reverse
+
+## Forbidden Patterns
+
+- `SELECT * FROM analytics.events` — without date filter (will scan TB of data)
+- `CROSS JOIN` between fact tables — always use explicit join conditions
+- Queries without `LIMIT` on raw event tables
+- Accessing `email` or PII columns without explicit user request

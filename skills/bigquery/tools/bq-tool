@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+# bq-tool — BigQuery Data Lake CLI
+# Modular CLI for BigQuery exploration, schema discovery, and read-only SQL queries.
+#
+# Usage: bq-tool <command> [options]
+#
+# Environment:
+#   BQ_SERVICE_ACCOUNT_JSON  Service account JSON key (set by skill credential system)
+#   BQ_PROJECT_ID            GCP project ID
+#   BQ_DEFAULT_DATASET       Default dataset for queries
+#   BQ_LOCATION              BigQuery location (default: EU)
+#   BQ_MAX_BYTES_BILLED      Max bytes billed per query (default: 1 GB)
+#   BQ_CONFIG                Path to config file (default: ~/.config/gent-bq/config)
+
+set -euo pipefail
+
+# Resolve script directory (works with symlinks)
+BQ_ROOT="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")")" && pwd)"
+BQ_CLI_DIR="${BQ_ROOT}/bq-cli"
+
+# --- Usage / version (no config needed) ---
+
+bq_tool_usage() {
+    cat <<'USAGE'
+bq-tool — BigQuery Data Lake CLI
+
+Usage: bq-tool <command> [options]
+
+Commands:
+  health                        Check BigQuery connectivity
+  datasets                      List datasets in the project
+  tables <dataset>              List tables in a dataset
+  schema <dataset.table>        Show table schema
+  schema-dump [dataset]         Dump all table schemas
+  preview <dataset.table> [-n N]  Preview table rows (default: 10)
+  query "<SQL>"                 Run a read-only SELECT query
+  query --dry-run "<SQL>"       Estimate query cost without running
+  query --file <path>           Run query from a SQL file
+  refresh                       Refresh metadata cache (datasets, tables, locations)
+  jobs [--limit N]              List recent query jobs
+  job <job_id>                  Show job details
+  cost <job_id>                 Show bytes processed / cost estimate
+  version                       Show CLI version
+
+Options:
+  --help, -h     Show this help
+  --json         Raw JSON output (no formatting)
+  --verbose, -v  Verbose output
+
+Environment:
+  BQ_SERVICE_ACCOUNT_JSON  SA JSON key (set by skill credential system)
+  BQ_PROJECT_ID            GCP project ID (required)
+  BQ_DEFAULT_DATASET       Default dataset for unqualified table refs
+  BQ_LOCATION              BigQuery data location (default: EU)
+  BQ_MAX_BYTES_BILLED      Cost guard per query (default: 1 GB)
+
+Examples:
+  bq-tool health
+  bq-tool datasets
+  bq-tool tables my_dataset
+  bq-tool schema my_dataset.users
+  bq-tool preview my_dataset.users -n 5
+  bq-tool query "SELECT COUNT(*) FROM my_dataset.users"
+  bq-tool query --dry-run "SELECT * FROM my_dataset.events"
+  bq-tool refresh
+USAGE
+}
+
+# Parse global flags (before config load so --help/version work without credentials)
+BQ_RAW_JSON="${BQ_RAW_JSON:-false}"
+BQ_VERBOSE="${BQ_VERBOSE:-false}"
+
+ARGS=()
+for arg in "$@"; do
+    case "$arg" in
+        --json) BQ_RAW_JSON=true ;;
+        --verbose|-v) BQ_VERBOSE=true ;;
+        --help|-h)
+            if [ ${#ARGS[@]} -eq 0 ]; then
+                bq_tool_usage
+                exit 0
+            fi
+            ARGS+=("$arg")
+            ;;
+        *) ARGS+=("$arg") ;;
+    esac
+done
+export BQ_RAW_JSON BQ_VERBOSE
+
+set -- "${ARGS[@]+"${ARGS[@]}"}"
+
+if [ $# -eq 0 ]; then
+    bq_tool_usage
+    exit 1
+fi
+
+COMMAND="$1"
+shift
+
+# Handle version early (no config needed)
+if [ "$COMMAND" = "version" ] || [ "$COMMAND" = "--version" ]; then
+    echo "bq-tool 0.1.0 (BigQuery Data Lake CLI)"
+    exit 0
+fi
+
+# Source core libraries
+# shellcheck source=bq-cli/config.sh
+source "${BQ_CLI_DIR}/config.sh"
+# shellcheck source=bq-cli/lib/format.sh
+source "${BQ_CLI_DIR}/lib/format.sh"
+# shellcheck source=bq-cli/lib/auth.sh
+source "${BQ_CLI_DIR}/lib/auth.sh"
+# shellcheck source=bq-cli/lib/http.sh
+source "${BQ_CLI_DIR}/lib/http.sh"
+# shellcheck source=bq-cli/lib/query.sh
+source "${BQ_CLI_DIR}/lib/query.sh"
+# shellcheck source=bq-cli/lib/cache.sh
+source "${BQ_CLI_DIR}/lib/cache.sh"
+
+# Load config
+bq_load_config
+
+# Source and dispatch command
+case "$COMMAND" in
+    health)
+        source "${BQ_CLI_DIR}/commands/health.sh"
+        cmd_health "$@"
+        ;;
+    datasets)
+        source "${BQ_CLI_DIR}/commands/datasets.sh"
+        cmd_datasets "$@"
+        ;;
+    tables)
+        source "${BQ_CLI_DIR}/commands/tables.sh"
+        cmd_tables "$@"
+        ;;
+    schema|schema-dump)
+        source "${BQ_CLI_DIR}/commands/schema.sh"
+        if [ "$COMMAND" = "schema-dump" ]; then
+            cmd_schema_dump "$@"
+        else
+            cmd_schema "$@"
+        fi
+        ;;
+    preview)
+        source "${BQ_CLI_DIR}/commands/preview.sh"
+        cmd_preview "$@"
+        ;;
+    query)
+        source "${BQ_CLI_DIR}/commands/query.sh"
+        cmd_query "$@"
+        ;;
+    jobs|job)
+        source "${BQ_CLI_DIR}/commands/jobs.sh"
+        if [ "$COMMAND" = "job" ]; then
+            cmd_job_detail "$@"
+        else
+            cmd_jobs "$@"
+        fi
+        ;;
+    refresh)
+        source "${BQ_CLI_DIR}/commands/refresh.sh"
+        cmd_refresh "$@"
+        ;;
+    cost)
+        source "${BQ_CLI_DIR}/commands/cost.sh"
+        cmd_cost "$@"
+        ;;
+    *)
+        echo "Error: unknown command '$COMMAND'" >&2
+        echo "Run 'bq-tool --help' for usage." >&2
+        exit 1
+        ;;
+esac

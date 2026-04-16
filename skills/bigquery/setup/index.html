@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connect to BigQuery</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa; color: #333; padding: 32px; max-width: 560px; margin: 0 auto;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 24px; }
+    .card {
+      background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card.connected { border-left: 4px solid #22c55e; }
+    .card.disconnected { border-left: 4px solid #e5e7eb; }
+    .card.error-state { border-left: 4px solid #ef4444; }
+    label { font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px; }
+    input[type="text"], textarea {
+      width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 0.85rem; outline: none; transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: #2563eb; }
+    textarea { resize: vertical; min-height: 120px; font-family: 'SF Mono', Monaco, monospace; font-size: 0.78rem; }
+    .field { margin-bottom: 12px; }
+    .row { display: flex; gap: 12px; }
+    .row > .field { flex: 1; }
+    .btn {
+      display: inline-block; padding: 10px 20px; border-radius: 8px; border: none;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: all 0.15s; text-align: center;
+    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .kv { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+    .kv .k { color: #888; min-width: 120px; font-size: 0.85rem; }
+    .kv .v { font-size: 0.85rem; word-break: break-all; }
+    .alert {
+      border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.85rem;
+    }
+    .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+    .alert-error { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+    .alert-info { background: #dbeafe; border: 1px solid #93c5fd; color: #1e40af; }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px; border: 2px solid #fff;
+      border-top-color: transparent; border-radius: 50%;
+      animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none; }
+    code {
+      background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.82rem;
+    }
+    .hint { font-size: 0.78rem; color: #999; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>BigQuery Data Lake</h1>
+  <p class="subtitle">Connect this Gent to your Google BigQuery data lake</p>
+
+  <!-- State: Disconnected (form) -->
+  <div id="view-connect" class="card disconnected">
+    <p style="color:#888; margin-bottom:16px">Paste a GCP Service Account JSON key with BigQuery read access.</p>
+    <div class="field">
+      <label for="project-id">GCP Project ID</label>
+      <input type="text" id="project-id" placeholder="my-gcp-project-123">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="default-dataset">Default Dataset (optional)</label>
+        <input type="text" id="default-dataset" placeholder="my_dataset">
+      </div>
+      <div class="field">
+        <label for="max-bytes">Max Bytes Billed</label>
+        <input type="text" id="max-bytes" placeholder="1073741824" value="1073741824">
+        <p class="hint">Cost guard per query (default: 1 GB)</p>
+      </div>
+    </div>
+    <div class="field">
+      <label for="sa-json">Service Account JSON Key</label>
+      <textarea id="sa-json" placeholder='{"type": "service_account", "project_id": "...", ...}'></textarea>
+      <p class="hint">
+        Create a service account with <code>bigquery.dataViewer</code> and <code>bigquery.jobUser</code> roles,
+        then paste the JSON key here. Dataset locations are auto-discovered.
+      </p>
+    </div>
+    <button id="btn-connect" class="btn btn-primary" style="width:100%; margin-top:4px">
+      Connect to BigQuery
+    </button>
+  </div>
+
+  <!-- State: Verifying -->
+  <div id="view-verifying" class="card hidden">
+    <div class="alert alert-info">
+      <span class="spinner"></span> Verifying credentials...
+    </div>
+  </div>
+
+  <!-- State: Connected -->
+  <div id="view-connected" class="card connected hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <span class="badge badge-green">Connected</span>
+      <button id="btn-update" class="btn btn-secondary" style="font-size:0.8rem; padding:6px 14px">
+        Update Credentials
+      </button>
+    </div>
+    <div id="connected-details" style="margin-top:16px"></div>
+  </div>
+
+  <!-- State: Error -->
+  <div id="view-error" class="card error-state hidden">
+    <div id="error-message" class="alert alert-error"></div>
+    <button id="btn-retry" class="btn btn-secondary" style="margin-top:12px">Try Again</button>
+  </div>
+
+  <script>
+    "use strict";
+
+    // --- State ---
+    var state = {
+      projectId: "",
+      defaultDataset: "",
+      maxBytesBilled: "1073741824",
+      saEmail: "",
+      keyId: "",
+      hasCredentials: false,
+      credentials: {}
+    };
+
+    // --- DOM refs ---
+    var views = {
+      connect: document.getElementById("view-connect"),
+      verifying: document.getElementById("view-verifying"),
+      connected: document.getElementById("view-connected"),
+      error: document.getElementById("view-error")
+    };
+
+    function showView(name) {
+      Object.keys(views).forEach(function(k) {
+        views[k].classList.toggle("hidden", k !== name);
+      });
+    }
+
+    // --- postMessage handling ---
+    function postToParent(type, payload) {
+      if (window.parent !== window) {
+        window.parent.postMessage(Object.assign({ type: type }, payload || {}), "*");
+      }
+    }
+
+    // Extract safe metadata from SA JSON (never expose the full key)
+    function extractSaMetadata(saJsonStr) {
+      var meta = { email: "", keyId: "", projectId: "" };
+      try {
+        var parsed = JSON.parse(saJsonStr);
+        meta.email = parsed.client_email || "";
+        meta.projectId = parsed.project_id || "";
+        if (parsed.private_key_id) {
+          meta.keyId = parsed.private_key_id.substring(0, 8) + "...";
+        }
+      } catch(e) {}
+      return meta;
+    }
+
+    window.addEventListener("message", function(event) {
+      var data = event.data;
+      if (!data || !data.type) return;
+
+      switch (data.type) {
+        case "setup:init":
+          // Dashboard sends initial context
+          if (data.credentials) {
+            // Load non-secret configurable fields
+            if (data.credentials.BQ_PROJECT_ID) {
+              state.projectId = data.credentials.BQ_PROJECT_ID;
+            }
+            if (data.credentials.BQ_DEFAULT_DATASET) {
+              state.defaultDataset = data.credentials.BQ_DEFAULT_DATASET;
+            }
+            if (data.credentials.BQ_MAX_BYTES_BILLED) {
+              state.maxBytesBilled = data.credentials.BQ_MAX_BYTES_BILLED;
+            }
+
+            // Check if secret credentials are configured (metadata from backend)
+            var secretsProvided = (data.credentials._secrets_provided || "").split(",").filter(Boolean);
+            var hasSaJson = secretsProvided.indexOf("BQ_SERVICE_ACCOUNT_JSON") !== -1;
+
+            // Also handle the case where full SA JSON is passed (e.g. right after setup:complete)
+            if (!hasSaJson && data.credentials.BQ_SERVICE_ACCOUNT_JSON) {
+              var rawSa = data.credentials.BQ_SERVICE_ACCOUNT_JSON;
+              if (typeof rawSa === "string" && rawSa.trim().charAt(0) === "{") {
+                hasSaJson = true;
+                var parsed = extractSaMetadata(rawSa);
+                state.saEmail = parsed.email;
+                state.keyId = parsed.keyId;
+                state.projectId = state.projectId || parsed.projectId;
+              }
+            }
+
+            // Load safe metadata for secret fields (from backend GET /credentials)
+            if (data.credentials["_meta_BQ_SERVICE_ACCOUNT_JSON_client_email"]) {
+              state.saEmail = data.credentials["_meta_BQ_SERVICE_ACCOUNT_JSON_client_email"];
+            }
+            if (data.credentials["_meta_BQ_SERVICE_ACCOUNT_JSON_project_id"]) {
+              state.projectId = state.projectId || data.credentials["_meta_BQ_SERVICE_ACCOUNT_JSON_project_id"];
+            }
+            if (data.credentials["_meta_BQ_SERVICE_ACCOUNT_JSON_key_id"]) {
+              state.keyId = data.credentials["_meta_BQ_SERVICE_ACCOUNT_JSON_key_id"];
+            }
+
+            if (hasSaJson) {
+              state.hasCredentials = true;
+              showConnected();
+              return;
+            }
+          }
+          // No existing credentials — show the form with pre-filled non-secret values
+          if (state.projectId) {
+            document.getElementById("project-id").value = state.projectId;
+          }
+          if (state.defaultDataset) {
+            document.getElementById("default-dataset").value = state.defaultDataset;
+          }
+          if (state.maxBytesBilled) {
+            document.getElementById("max-bytes").value = state.maxBytesBilled;
+          }
+          break;
+      }
+    });
+
+    // --- Connect button ---
+    document.getElementById("btn-connect").addEventListener("click", function() {
+      var projectId = document.getElementById("project-id").value.trim();
+      var defaultDataset = document.getElementById("default-dataset").value.trim();
+      var maxBytes = document.getElementById("max-bytes").value.trim() || "1073741824";
+      var saJsonRaw = document.getElementById("sa-json").value.trim();
+
+      if (!projectId) {
+        showError("Please enter a GCP Project ID.");
+        return;
+      }
+      if (!saJsonRaw) {
+        showError("Please paste the Service Account JSON key.");
+        return;
+      }
+
+      // Validate JSON
+      var parsed;
+      try {
+        parsed = JSON.parse(saJsonRaw);
+      } catch(e) {
+        showError("Invalid JSON: " + e.message);
+        return;
+      }
+
+      if (parsed.type !== "service_account") {
+        showError("JSON key must have type: \"service_account\". Got: \"" + (parsed.type || "undefined") + "\"");
+        return;
+      }
+
+      if (!parsed.client_email) {
+        showError("JSON key is missing client_email field.");
+        return;
+      }
+
+      state.projectId = projectId;
+      state.defaultDataset = defaultDataset;
+      state.maxBytesBilled = maxBytes;
+      state.saEmail = parsed.client_email;
+      state.keyId = parsed.private_key_id ? parsed.private_key_id.substring(0, 8) + "..." : "";
+      state.hasCredentials = true;
+
+      showView("verifying");
+
+      // Send credentials to dashboard (no location — auto-discovered per dataset)
+      state.credentials = {
+        BQ_SERVICE_ACCOUNT_JSON: saJsonRaw,
+        BQ_PROJECT_ID: projectId,
+        BQ_DEFAULT_DATASET: defaultDataset,
+        BQ_MAX_BYTES_BILLED: maxBytes
+      };
+
+      // Notify dashboard that setup is complete
+      postToParent("setup:complete", {
+        credentials: state.credentials
+      });
+
+      // Show connected after a brief delay (dashboard will verify via hook)
+      setTimeout(function() {
+        showConnected();
+      }, 1000);
+    });
+
+    // --- Show connected state ---
+    function showConnected() {
+      var details = document.getElementById("connected-details");
+      var html = "";
+      html += '<div class="kv"><span class="k">Project</span><span class="v">' +
+        escapeHtml(state.projectId) + '</span></div>';
+      if (state.saEmail) {
+        html += '<div class="kv"><span class="k">Service Account</span><span class="v">' +
+          escapeHtml(state.saEmail) + '</span></div>';
+      }
+      if (state.keyId) {
+        html += '<div class="kv"><span class="k">Key ID</span><span class="v">' +
+          escapeHtml(state.keyId) + '</span></div>';
+      }
+      if (state.defaultDataset) {
+        html += '<div class="kv"><span class="k">Default Dataset</span><span class="v">' +
+          escapeHtml(state.defaultDataset) + '</span></div>';
+      }
+      html += '<div class="kv"><span class="k">Location</span><span class="v">Auto-discovered per dataset</span></div>';
+      html += '<div class="alert alert-success" style="margin-top:12px">Credentials configured</div>';
+      details.innerHTML = html;
+      showView("connected");
+    }
+
+    // --- Show error state ---
+    function showError(msg) {
+      document.getElementById("error-message").textContent = msg;
+      showView("error");
+    }
+
+    // --- Update Credentials (switch from connected to form) ---
+    document.getElementById("btn-update").addEventListener("click", function() {
+      // Pre-fill form with existing non-secret values
+      document.getElementById("project-id").value = state.projectId || "";
+      document.getElementById("default-dataset").value = state.defaultDataset || "";
+      document.getElementById("max-bytes").value = state.maxBytesBilled || "1073741824";
+      // SA JSON textarea is always empty — never show existing credentials
+      document.getElementById("sa-json").value = "";
+      showView("connect");
+    });
+
+    // --- Retry ---
+    document.getElementById("btn-retry").addEventListener("click", function() {
+      showView("connect");
+    });
+
+    // --- Escape HTML ---
+    function escapeHtml(str) {
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    // --- Notify dashboard that setup page is ready ---
+    postToParent("setup:ready", {});
+  </script>
+</body>
+</html>

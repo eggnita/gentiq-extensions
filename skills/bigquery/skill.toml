@@ -1,0 +1,110 @@
+[package]
+name = "bigquery-datalake"
+version = "0.1.0"
+description = "Virtual data analyst skill — BigQuery data lake exploration, schema discovery, and read-only SQL queries"
+author = "Gentiq"
+icon = "🔍"
+category = "data"
+tags = ["bigquery", "data", "sql", "analytics", "datalake", "gcp", "warehouse"]
+
+[routing]
+default_operation = "analyze"
+default_complexity = "routine"
+
+# --- Read / Browse tasks (fast tier) ---
+
+[routing.tasks.check_health]
+operation = "extract"
+complexity = "trivial"
+description = "Check BigQuery connectivity and credentials"
+triggers = ["bq health", "bigquery status", "is bigquery up", "connection status"]
+
+[routing.tasks.list_datasets]
+operation = "extract"
+complexity = "trivial"
+description = "List available BigQuery datasets"
+triggers = ["list datasets", "show datasets", "which datasets", "available datasets"]
+
+[routing.tasks.list_tables]
+operation = "extract"
+complexity = "trivial"
+description = "List tables in a BigQuery dataset"
+triggers = ["list tables", "show tables", "which tables", "tables in dataset"]
+
+[routing.tasks.show_schema]
+operation = "extract"
+complexity = "routine"
+description = "Show table schema — column names, types, descriptions"
+triggers = ["show schema", "table schema", "describe table", "table structure", "column types", "table columns"]
+
+[routing.tasks.preview_data]
+operation = "extract"
+complexity = "routine"
+description = "Preview sample rows from a table"
+triggers = ["preview table", "sample rows", "show data", "head of table", "peek at table", "table preview"]
+
+# --- Analysis tasks (standard tier) ---
+
+[routing.tasks.run_query]
+operation = "analyze"
+complexity = "routine"
+description = "Run a read-only SQL query against BigQuery"
+triggers = ["run query", "sql query", "select from", "query data", "run sql", "execute query"]
+
+[routing.tasks.explore_schema]
+operation = "analyze"
+complexity = "routine"
+description = "Explore and compare schemas across tables or datasets"
+triggers = ["explore schema", "compare schemas", "schema overview", "dump schemas", "all schemas"]
+
+[routing.tasks.data_analysis]
+operation = "reason"
+complexity = "complex"
+description = "Analyze data patterns, trends, and anomalies using SQL queries"
+triggers = ["analyze data", "data analysis", "find patterns", "data trends", "anomaly detection", "deep analysis"]
+
+# --- Setup (manual — admin pastes SA JSON) ---
+[setup]
+ui = "setup/index.html"
+type = "manual"
+display_name = "Connect to BigQuery"
+description = "Configure this Gent to access your Google BigQuery data lake"
+
+# --- Credentials ---
+[credentials]
+required = ["BQ_SERVICE_ACCOUNT_JSON"]
+configurable = ["BQ_PROJECT_ID", "BQ_DEFAULT_DATASET", "BQ_LOCATION", "BQ_MAX_BYTES_BILLED", "BQ_CACHE_TTL"]
+
+[credentials.defaults]
+BQ_PROJECT_ID = ""
+BQ_DEFAULT_DATASET = ""
+BQ_LOCATION = "EU"
+BQ_MAX_BYTES_BILLED = "1073741824"
+BQ_CACHE_TTL = "3600"
+
+# --- Cron Jobs ---
+[[cron]]
+name = "health_check"
+schedule = "0 */6 * * *"
+hook = "hooks/health_check.sh"
+description = "Check BigQuery connectivity and credential validity"
+timeout = 30
+
+# --- Lifecycle Hooks ---
+[lifecycle]
+on_install = "hooks/on_install.sh"
+on_setup_complete = "hooks/on_setup_complete.sh"
+on_credential_update = "hooks/on_credential_update.sh"
+on_uninstall = "hooks/on_uninstall.sh"
+
+# --- Status (dashboard widget) ---
+[status]
+hook = "hooks/status.sh"
+refresh_interval = 3600
+
+# --- Permissions ---
+[permissions]
+network = ["*.googleapis.com:443", "accounts.google.com:443"]
+tools = ["bq-tool"]
+cron = true
+setup_ui = true

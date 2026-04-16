@@ -1,0 +1,119 @@
+{
+  "ifn-health": {
+    "exec": "tools/ifn health",
+    "description": "Check IntrospectFN API connectivity",
+    "args_schema": {"type": "object", "properties": {}},
+    "side_effects": false,
+    "timeout_ms": 30000
+  },
+  "ifn-companies": {
+    "exec": "tools/ifn companies list",
+    "description": "List connected ERP companies",
+    "args_schema": {"type": "object", "properties": {}},
+    "side_effects": false,
+    "timeout_ms": 30000
+  },
+  "ifn-dashboard": {
+    "exec": "tools/ifn dashboard",
+    "description": "Get dashboard metrics for a company",
+    "args_schema": {
+      "type": "object",
+      "properties": {"connection_id": {"type": "string", "description": "Company connection UUID"}},
+      "required": ["connection_id"]
+    },
+    "side_effects": false,
+    "timeout_ms": 60000
+  },
+  "ifn-browse": {
+    "exec": "tools/ifn browse",
+    "description": "Browse live ERP records (vouchers, invoices, accounts, etc.)",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "connection_id": {"type": "string"},
+        "resource": {"type": "string", "description": "Resource type: vouchers, invoices, accounts, etc."},
+        "id": {"type": "string", "description": "Optional specific record ID"},
+        "options": {"type": "string", "description": "Additional CLI options"}
+      },
+      "required": ["connection_id", "resource"]
+    },
+    "side_effects": false,
+    "timeout_ms": 60000
+  },
+  "ifn-records": {
+    "exec": "tools/ifn records",
+    "description": "Browse locally synced ERP records",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "connection_id": {"type": "string"},
+        "doc_type": {"type": "string"},
+        "id": {"type": "string"}
+      },
+      "required": ["connection_id", "doc_type"]
+    },
+    "side_effects": false,
+    "timeout_ms": 60000
+  },
+  "ifn-analysis": {
+    "exec": "tools/ifn analysis",
+    "description": "Run financial analysis (accounts, balances, integrity, series)",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "type": {"type": "string", "enum": ["accounts", "balances", "integrity", "series"]},
+        "connection_id": {"type": "string"},
+        "account": {"type": "string", "description": "Account number for balance analysis"}
+      },
+      "required": ["type", "connection_id"]
+    },
+    "side_effects": false,
+    "timeout_ms": 180000
+  },
+  "ifn-staging": {
+    "exec": "tools/ifn staging",
+    "description": "Manage staged actions (list, propose, edit, reject)",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "action": {"type": "string", "enum": ["list", "list-all", "get", "propose", "edit", "clone", "reject", "next-number", "upload", "write-windows"]},
+        "connection_id": {"type": "string"},
+        "action_id": {"type": "string"},
+        "json_file": {"type": "string"}
+      },
+      "required": ["action"]
+    },
+    "side_effects": true,
+    "timeout_ms": 60000
+  },
+  "ifn-sync": {
+    "exec": "tools/ifn sync",
+    "description": "Check sync status, trigger sync, manage sync jobs",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "action": {"type": "string", "enum": ["status", "overview", "years", "trigger", "cancel"]},
+        "connection_id": {"type": "string"},
+        "job_id": {"type": "string"}
+      },
+      "required": ["action"]
+    },
+    "side_effects": true,
+    "timeout_ms": 60000
+  },
+  "ifn-link": {
+    "exec": "tools/ifn link",
+    "description": "Generate deep link to IntrospectFN web app",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "type": {"type": "string", "description": "Link type: voucher, invoice, staging, etc."},
+        "connection_id": {"type": "string"},
+        "args": {"type": "string", "description": "Additional link arguments"}
+      },
+      "required": ["type", "connection_id"]
+    },
+    "side_effects": false,
+    "timeout_ms": 10000
+  }
+}

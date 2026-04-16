@@ -1,0 +1,64 @@
+{
+  "bq-query": {
+    "exec": "tools/bq-tool query",
+    "description": "Execute a read-only SQL query against BigQuery",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "sql": {"type": "string", "description": "SQL query to execute (SELECT only)"},
+        "project_id": {"type": "string", "description": "GCP project ID (optional, uses default)"}
+      },
+      "required": ["sql"]
+    },
+    "side_effects": false,
+    "timeout_ms": 180000
+  },
+  "bq-schema": {
+    "exec": "tools/bq-tool schema",
+    "description": "Get table schema (columns, types, descriptions)",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "table": {"type": "string", "description": "Fully qualified table: project.dataset.table"},
+        "project_id": {"type": "string"}
+      },
+      "required": ["table"]
+    },
+    "side_effects": false,
+    "timeout_ms": 30000
+  },
+  "bq-health": {
+    "exec": "tools/bq-tool health",
+    "description": "Check BigQuery API connectivity and service account validity",
+    "args_schema": {"type": "object", "properties": {}},
+    "side_effects": false,
+    "timeout_ms": 30000
+  },
+  "bq-datasets": {
+    "exec": "tools/bq-tool datasets",
+    "description": "List available datasets and tables",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "project_id": {"type": "string"},
+        "dataset": {"type": "string", "description": "List tables in this dataset"}
+      }
+    },
+    "side_effects": false,
+    "timeout_ms": 30000
+  },
+  "bq-cost-estimate": {
+    "exec": "tools/bq-tool dry-run",
+    "description": "Estimate query cost without executing (dry run)",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "sql": {"type": "string", "description": "SQL query to estimate"},
+        "project_id": {"type": "string"}
+      },
+      "required": ["sql"]
+    },
+    "side_effects": false,
+    "timeout_ms": 30000
+  }
+}

@@ -1,7 +1,12 @@
 ---
-primaryEnv: IFN_API_KEY
-skillKey: introspectfn-erp
-emoji: 📊
+id: introspectfn-erp
+name: IntrospectFN ERP
+description: Virtual accountant — Fortnox ERP access via ifn CLI for browsing, analysis, and staging proposals
+activation: always
+task_type: data_analysis
+tools: [ifn-health, ifn-companies, ifn-dashboard, ifn-browse, ifn-records, ifn-analysis, ifn-staging, ifn-sync, ifn-link]
+requires_auth: [IFN_API_KEY, IFN_BASE_URL]
+schema_version: "1.0.0"
 ---
 
 # IntrospectFN — Virtual Accountant Skill

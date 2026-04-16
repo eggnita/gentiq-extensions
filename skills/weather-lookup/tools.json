@@ -1,0 +1,15 @@
+{
+  "weather-lookup": {
+    "exec": "tools/weather_lookup.sh",
+    "description": "Get current weather for a city",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "city": {"type": "string", "description": "City name (e.g. 'London', 'New York', 'Tokyo')"}
+      },
+      "required": ["city"]
+    },
+    "side_effects": false,
+    "timeout_ms": 15000
+  }
+}
