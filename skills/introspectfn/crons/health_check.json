@@ -1,0 +1,11 @@
+{
+  "id": "introspectfn-erp.health_check",
+  "schedule": "0 */6 * * *",
+  "invoke": {
+    "type": "skill",
+    "skill": "introspectfn-erp",
+    "tool": "ifn-health",
+    "args": {}
+  },
+  "schema_version": "1.0.0"
+}

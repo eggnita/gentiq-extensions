@@ -1,0 +1,9 @@
+{
+  "id": "introspectfn-erp.check_rotation",
+  "schedule": "0 8 * * *",
+  "invoke": {
+    "type": "prompt",
+    "prompt": "Check whether the IntrospectFN API key needs rotation. Use the ifn-health tool to verify current credentials, then report if rotation is needed."
+  },
+  "schema_version": "1.0.0"
+}

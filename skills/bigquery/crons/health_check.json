@@ -1,0 +1,11 @@
+{
+  "id": "bigquery-datalake.health_check",
+  "schedule": "0 */6 * * *",
+  "invoke": {
+    "type": "skill",
+    "skill": "bigquery-datalake",
+    "tool": "bq-health",
+    "args": {}
+  },
+  "schema_version": "1.0.0"
+}

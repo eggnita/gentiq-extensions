@@ -1,32 +1,31 @@
 # Gentiq Extensions
 
-Community and first-party skill packages for [Gentiq](https://gentiq.com) virtual employees.
+Skill packages for [Gentiq](https://gentiq.com) virtual employees, compatible with the **v2 runtime**.
 
 ## What are Skills?
 
 Skills are capability packages that can be pushed to Gents (Gentiq virtual employees). Each skill contains:
 
-- **`skill.toml`** - Package manifest with metadata, routing config, and permissions
-- **`SKILL.md`** - Markdown instructions that tell the agent how to behave
-- **`tools/`** - Optional executable scripts the agent can invoke
-- **`config/`** - Optional configuration templates
+- **`SKILL.md`** — Markdown instructions with YAML frontmatter (metadata)
+- **`tools.json`** — Declarative tool definitions the runtime exposes to the LLM
+- **`tools/`** — Executable tool scripts
+- **`crons/`** — Optional scheduled-turn definitions (one JSON per cron)
+- **`skill.toml`** — Optional package manifest read by GentOS (packaging, setup UI, lifecycle hooks). The runtime does not read this file.
+- **`setup/`**, **`hooks/`**, **`config/`**, **`docs/`** — Optional resources consumed by GentOS/gentd during install, not by the runtime
 
-## Skill Package Format
+## Package layout
 
 ```
 my-skill/
-  skill.toml          # Package manifest (required)
-  SKILL.md            # Agent instructions (required)
-  tools/              # Executable scripts (optional)
-    do_thing.js
-    helper.sh
-  config/             # Config templates (optional)
-    settings.yml
-  setup/              # Setup UI page (v2, optional)
-    index.html
-  hooks/              # Lifecycle & cron hooks (v2, optional)
-    health_check.sh
-    on_install.sh
+  SKILL.md            # Required — agent instructions + frontmatter
+  tools.json          # Required — tool declarations
+  tools/              # Tool scripts (referenced from tools.json)
+    my-tool.sh
+  crons/              # Optional v2 cron definitions
+    nightly.json
+  skill.toml          # Optional — GentOS package manifest
+  setup/index.html    # Optional — setup UI (GentOS)
+  hooks/              # Optional — lifecycle hooks (gentd)
 ```
 
 ## Available Skills
@@ -34,130 +33,139 @@ my-skill/
 | Skill | Description | Category |
 |-------|-------------|----------|
 | [weather-lookup](skills/weather-lookup/) | Look up current weather for any city using wttr.in | utilities |
-| [introspectfn-erp](skills/introspectfn/) | Virtual accountant — ERP analysis, bookkeeping proposals, and financial insights via IntrospectFN | accounting |
+| [bigquery-datalake](skills/bigquery/) | Virtual data analyst — BigQuery schema discovery and read-only SQL | data |
+| [introspectfn-erp](skills/introspectfn/) | Virtual accountant — ERP analysis and bookkeeping proposals via IntrospectFN | accounting |
 
-## Creating a Skill
+## SKILL.md frontmatter (v2)
 
-1. Create a directory under `skills/`
-2. Add a `skill.toml` manifest (see [skill.toml reference](#skilltoml-reference) below)
-3. Write `SKILL.md` with agent instructions
-4. Optionally add tool scripts in `tools/`
-5. Package with `tar -czf my-skill-1.0.0.tar.gz my-skill/`
-6. Upload via `POST /api/v1/skills/upload` or the web admin
+Validated against `gentiq-gent-runtime/src/schemas/skill.json`.
 
-## skill.toml Reference
+```markdown
+---
+id: my-skill                      # pattern: ^[a-z0-9-]+$
+name: My Skill
+description: What this skill does
+activation: on-demand              # "always" | "on-demand"
+task_type: conversation            # optional, used for routing
+tools: [my-tool]                   # tool names declared in tools.json
+requires_auth: [MY_API_KEY]        # secret names the runtime injects as env vars
+schema_version: "1.0.0"
+---
 
-```toml
-[package]
-name = "my-skill"
-version = "1.0.0"
-description = "What this skill does"
-author = "Your Name"
-icon = "emoji"
-category = "general"
-tags = ["tag1", "tag2"]
-
-[routing]
-default_operation = "generate"
-default_complexity = "routine"
-
-[routing.tasks.main_task]
-operation = "generate"
-complexity = "routine"
-description = "Primary task description"
-triggers = ["keyword1", "keyword2"]
-
-[credentials]
-required = ["MY_API_KEY"]
-optional = []
-
-[permissions]
-network = ["api.example.com:443"]
-tools = ["my_tool"]
+# My Skill — agent instructions go here
+...
 ```
 
-### V2 Manifest Extensions
+## tools.json (v2)
 
-Skills can declare setup flows, cron jobs, lifecycle hooks, and status widgets. V1 skills (without these sections) remain fully valid.
+Validated against `gentiq-gent-runtime/src/schemas/tools.json`.
 
-#### Setup UI
-
-The `[setup]` section declares a bundled HTML page that the dashboard renders for credential provisioning.
-
-```toml
-[setup]
-ui = "setup/index.html"                   # HTML page loaded by dashboard
-type = "oauth_provision"                   # "oauth_provision" | "manual" | "none"
-display_name = "Connect to My Service"
-description = "Authorize this Gent to access your data"
+```json
+{
+  "my-tool": {
+    "exec": "tools/my-tool.sh",
+    "description": "What the tool does (shown to the LLM)",
+    "args_schema": {
+      "type": "object",
+      "properties": {
+        "query": {"type": "string", "description": "User query"}
+      },
+      "required": ["query"]
+    },
+    "side_effects": false,
+    "timeout_ms": 30000
+  }
+}
 ```
 
-Supported `type` values:
-- `oauth_provision` — OAuth-style redirect flow with server-side token exchange
-- `manual` — User manually enters credentials (API keys, tokens)
-- `none` — No setup needed (credentials pushed by admin)
+## v2 tool-invocation contract
 
-#### Credentials (extended)
+The v2 runtime invokes a tool by spawning the `exec` command with:
 
-```toml
-[credentials]
-required = ["MY_API_KEY"]                  # Must be set before skill works
-configurable = ["MY_BASE_URL"]             # Admin can override; has default
+- **`cwd`** = skill directory
+- **Arguments** passed as a **JSON blob in the `TOOL_ARGS` environment variable** (not positional CLI args)
+- **Secrets** from `requires_auth` injected as env vars (decrypted from `secrets.enc`)
+- **Timeout** from `tools.json` (default 180 s), killed on expiry
+- **Stdout** captured; if it parses as JSON → returned as structured `data`, otherwise returned as `text`
+- **Non-zero exit** → tool result marked as error with captured stderr
 
-[credentials.defaults]
-MY_BASE_URL = "https://api.example.com"
+### Minimum tool script (bash)
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+ARGS="${TOOL_ARGS:-{}}"
+QUERY=$(printf '%s' "$ARGS" | jq -r '.query // empty')
+[ -z "$QUERY" ] && { echo '{"error":"Missing query"}' >&2; exit 1; }
+# ... do work, emit JSON on stdout ...
 ```
 
-`configurable` credentials have defaults in `[credentials.defaults]` and can optionally be overridden by the admin.
+### Adapter pattern for existing CLIs
 
-#### Cron Jobs
+When wrapping an existing CLI (positional args), add a thin adapter shim that
+reads `TOOL_ARGS` and translates to CLI arguments. Reference `tools.json`
+entries at the adapter with a subcommand:
 
-```toml
-[[cron]]
-name = "health_check"
-schedule = "0 */6 * * *"                   # Standard 5-field cron expression
-hook = "hooks/health_check.sh"
-description = "Check API connectivity"
-timeout = 30                               # Max runtime in seconds
+```json
+"exec": "tools/my-adapter.sh query"
 ```
 
-Multiple `[[cron]]` entries are supported. gentd schedules and executes them, passing credentials as environment variables.
+See `skills/bigquery/tools/bq-adapter.sh` and `skills/introspectfn/tools/ifn-adapter.sh` for working examples.
 
-#### Lifecycle Hooks
+## crons/ (v2)
 
-```toml
-[lifecycle]
-on_install = "hooks/on_install.sh"
-on_setup_complete = "hooks/on_setup_complete.sh"
-on_credential_update = "hooks/on_credential_update.sh"
-on_uninstall = "hooks/on_uninstall.sh"
+One JSON file per cron, validated against `gentiq-gent-runtime/src/schemas/cron.json`. The runtime treats crons as synthetic turn triggers — it does **not** tick its own clock; gentd dispatches crons on schedule.
+
+```json
+{
+  "id": "my-skill.nightly",
+  "schedule": "0 2 * * *",
+  "timezone": "UTC",
+  "invoke": {
+    "type": "skill",
+    "skill": "my-skill",
+    "tool": "my-tool",
+    "args": {"query": "nightly report"}
+  },
+  "schema_version": "1.0.0"
+}
 ```
 
-All hooks are executable scripts that receive credentials as env vars and output JSON to stdout.
+`invoke.type` is either:
+- `"skill"` — calls a skill tool directly with the provided args
+- `"prompt"` — fires a turn with the given prompt; the agent picks the tools
 
-#### Status Widget
+At install time, gentd copies these files into the gent workspace `crons/` directory where the runtime loads them.
 
-```toml
-[status]
-hook = "hooks/status.sh"
-refresh_interval = 3600                    # Seconds between refreshes
-```
+## Routing
 
-The status hook provides data for the dashboard's skill status widget.
+Task-type routing is declared via the `task_type` field in SKILL.md. Complex per-trigger routing tables belong in GentOS's task-type routing config — they're no longer read from `skill.toml` by the runtime.
 
-#### Permissions (extended)
+## Creating a skill
 
-```toml
-[permissions]
-network = ["api.example.com:443"]
-tools = ["my_tool"]
-cron = true                                # Skill uses cron jobs
-setup_ui = true                            # Skill has a setup UI page
-```
+1. Create a directory under `skills/`.
+2. Write `SKILL.md` with frontmatter (above).
+3. Write `tools.json` declaring the tools your skill exposes.
+4. Write tool scripts under `tools/`. Read args from `TOOL_ARGS`, emit JSON on stdout.
+5. Optionally add `crons/*.json` for scheduled turns.
+6. Optionally add `skill.toml` for GentOS packaging (setup UI, permissions, lifecycle hooks).
+7. Package: `tar -czf dist/my-skill-1.0.0.tar.gz -C skills my-skill`.
+8. Upload via `POST /api/v1/skills/upload` or the web admin.
 
-#### Setup UI postMessage Contract
+## skill.toml (GentOS-side only)
 
-The setup page communicates with the dashboard via `postMessage`:
+The v2 runtime ignores `skill.toml`. GentOS still reads it for:
+
+- Package metadata (`[package]`)
+- Setup UI definition (`[setup]`)
+- Credential declarations and defaults (`[credentials]`, `[credentials.defaults]`)
+- Lifecycle hooks (`[lifecycle]`) — `on_install`, `on_setup_complete`, etc.
+- Status widget (`[status]`)
+- Permissions (`[permissions]`) — network egress, declared tools, cron/setup_ui flags
+
+### Setup UI postMessage contract
+
+Setup page ↔ dashboard communication:
 
 | Direction | Type | Payload |
 |-----------|------|---------|
@@ -168,28 +176,9 @@ The setup page communicates with the dashboard via `postMessage`:
 | Extension → Dashboard | `setup:complete` | `{credentials: {KEY: val}}` |
 | Extension → Dashboard | `setup:error` | `{message}` |
 
-The `setup:exchange` message is critical for OAuth flows — it delegates the server-to-server code-to-key exchange to the dashboard backend, keeping raw keys out of the browser.
+The `setup:exchange` message delegates OAuth code-to-token exchange to the dashboard backend, keeping raw secrets out of the browser.
 
-### Routing Operations
-
-| Operation | Description | Tier (routine) |
-|-----------|-------------|----------------|
-| `reason` | Complex reasoning, analysis | thinking |
-| `generate` | Content generation | standard |
-| `analyze` | Data analysis, review | standard |
-| `converse` | Conversation, chat | standard |
-| `summarize` | Summarization | fast |
-| `extract` | Data extraction | fast |
-| `classify` | Classification | fast |
-| `transform` | Format conversion | fast |
-
-### Complexity Modifiers
-
-- **`trivial`** - Downgrades tier by 1
-- **`routine`** - No change
-- **`complex`** - Upgrades tier by 1
-
-## Building a Package
+## Building a package
 
 ```bash
 cd skills/weather-lookup

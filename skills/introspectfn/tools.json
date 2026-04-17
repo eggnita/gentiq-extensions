@@ -1,20 +1,20 @@
 {
   "ifn-health": {
-    "exec": "tools/ifn health",
+    "exec": "tools/ifn-adapter.sh health",
     "description": "Check IntrospectFN API connectivity",
     "args_schema": {"type": "object", "properties": {}},
     "side_effects": false,
     "timeout_ms": 30000
   },
   "ifn-companies": {
-    "exec": "tools/ifn companies list",
+    "exec": "tools/ifn-adapter.sh companies",
     "description": "List connected ERP companies",
     "args_schema": {"type": "object", "properties": {}},
     "side_effects": false,
     "timeout_ms": 30000
   },
   "ifn-dashboard": {
-    "exec": "tools/ifn dashboard",
+    "exec": "tools/ifn-adapter.sh dashboard",
     "description": "Get dashboard metrics for a company",
     "args_schema": {
       "type": "object",
@@ -25,7 +25,7 @@
     "timeout_ms": 60000
   },
   "ifn-browse": {
-    "exec": "tools/ifn browse",
+    "exec": "tools/ifn-adapter.sh browse",
     "description": "Browse live ERP records (vouchers, invoices, accounts, etc.)",
     "args_schema": {
       "type": "object",
@@ -41,7 +41,7 @@
     "timeout_ms": 60000
   },
   "ifn-records": {
-    "exec": "tools/ifn records",
+    "exec": "tools/ifn-adapter.sh records",
     "description": "Browse locally synced ERP records",
     "args_schema": {
       "type": "object",
@@ -56,7 +56,7 @@
     "timeout_ms": 60000
   },
   "ifn-analysis": {
-    "exec": "tools/ifn analysis",
+    "exec": "tools/ifn-adapter.sh analysis",
     "description": "Run financial analysis (accounts, balances, integrity, series)",
     "args_schema": {
       "type": "object",
@@ -71,7 +71,7 @@
     "timeout_ms": 180000
   },
   "ifn-staging": {
-    "exec": "tools/ifn staging",
+    "exec": "tools/ifn-adapter.sh staging",
     "description": "Manage staged actions (list, propose, edit, reject)",
     "args_schema": {
       "type": "object",
@@ -87,7 +87,7 @@
     "timeout_ms": 60000
   },
   "ifn-sync": {
-    "exec": "tools/ifn sync",
+    "exec": "tools/ifn-adapter.sh sync",
     "description": "Check sync status, trigger sync, manage sync jobs",
     "args_schema": {
       "type": "object",
@@ -102,7 +102,7 @@
     "timeout_ms": 60000
   },
   "ifn-link": {
-    "exec": "tools/ifn link",
+    "exec": "tools/ifn-adapter.sh link",
     "description": "Generate deep link to IntrospectFN web app",
     "args_schema": {
       "type": "object",

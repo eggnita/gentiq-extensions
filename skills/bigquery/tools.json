@@ -1,6 +1,6 @@
 {
   "bq-query": {
-    "exec": "tools/bq-tool query",
+    "exec": "tools/bq-adapter.sh query",
     "description": "Execute a read-only SQL query against BigQuery",
     "args_schema": {
       "type": "object",
@@ -14,7 +14,7 @@
     "timeout_ms": 180000
   },
   "bq-schema": {
-    "exec": "tools/bq-tool schema",
+    "exec": "tools/bq-adapter.sh schema",
     "description": "Get table schema (columns, types, descriptions)",
     "args_schema": {
       "type": "object",
@@ -28,15 +28,15 @@
     "timeout_ms": 30000
   },
   "bq-health": {
-    "exec": "tools/bq-tool health",
+    "exec": "tools/bq-adapter.sh health",
     "description": "Check BigQuery API connectivity and service account validity",
     "args_schema": {"type": "object", "properties": {}},
     "side_effects": false,
     "timeout_ms": 30000
   },
   "bq-datasets": {
-    "exec": "tools/bq-tool datasets",
-    "description": "List available datasets and tables",
+    "exec": "tools/bq-adapter.sh datasets",
+    "description": "List available datasets; pass dataset to list tables within it",
     "args_schema": {
       "type": "object",
       "properties": {
@@ -48,7 +48,7 @@
     "timeout_ms": 30000
   },
   "bq-cost-estimate": {
-    "exec": "tools/bq-tool dry-run",
+    "exec": "tools/bq-adapter.sh dry-run",
     "description": "Estimate query cost without executing (dry run)",
     "args_schema": {
       "type": "object",

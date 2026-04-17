@@ -1,0 +1,9 @@
+{
+  "id": "introspectfn-erp.data_freshness",
+  "schedule": "0 9 * * 1-5",
+  "invoke": {
+    "type": "prompt",
+    "prompt": "Check ERP sync freshness across all connected companies. Call ifn-companies to list them, then ifn-sync (action=status) per company. Flag any company whose last sync is older than 24h."
+  },
+  "schema_version": "1.0.0"
+}
