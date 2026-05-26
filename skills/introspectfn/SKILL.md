@@ -590,6 +590,242 @@ This performs self-service rotation: both old and new keys remain valid until th
 
 **NEVER ask the user for API keys, URLs, or configuration.** All credentials are injected automatically.
 
+---
+
+## Chat Context — IMPORTANT
+
+The IFN webapp passes context into the conversation as a JSON object. It looks like this:
+
+```json
+{
+  "path": "/company/8538e1aa-3197-400d-af46-c420f656a09b/inbox",
+  "focus": "inbox",
+  "company": "8538e1aa-3197-400d-af46-c420f656a09b",
+  "resource": "inbox",
+  "data_source": "internal"
+}
+```
+
+**Always use the `company` field as your connection_id.** Do NOT ask "which company?" if the context already provides it.
+
+The context may also include:
+- `file_id` — if the user is viewing a specific file
+- `account_number` — if viewing an account
+- `financial_year` — the current FY
+- `focus` — what page they're on: `inbox`, `voucher`, `account`, `file`, etc.
+
+---
+
+## Settlement Tool — USE THIS FOR ALL SETTLEMENT REQUESTS
+
+When a user asks about settling, booking, or processing delivery partner invoices (Foodora, Wolt, Uber Eats), **use the `settlement` CLI tool**. Do NOT try to manually browse vouchers and guess — the settlement tool has parsers that extract exact amounts.
+
+### Quick Reference
+
+```bash
+# Step 1: Find settlement files in the inbox
+settlement find <company_id> --partner foodora
+settlement find <company_id> --partner wolt
+settlement find <company_id> --partner ubereats
+
+# Step 2: Parse a settlement (Foodora needs XLS + PDF IDs comma-separated)
+settlement parse <company_id> --file-id <xls_id>,<pdf_id> --partner foodora
+settlement parse <company_id> --file-id <payout_id>,<sales_id>,<commission_id> --partner wolt
+settlement parse <company_id> --file-id <pdf_id> --partner ubereats
+
+# Step 3: Learn booking template (first time or if >90 days old)
+settlement learn <company_id> --partner foodora
+
+# Step 4: Build a balanced voucher proposal
+settlement propose <company_id> --partner foodora --file-id <xls_id>,<pdf_id>
+
+# Step 5 (Phase 2): Stage for approval
+settlement stage <company_id> --partner foodora --file-id <xls_id>,<pdf_id>
+
+# Check template cache status
+settlement status
+```
+
+### Example: "How should we settle the last Foodora invoice?"
+
+Given context `{"company": "8538e1aa-...", "resource": "inbox"}`:
+
+```bash
+# 1. Use the company from context
+COMPANY="8538e1aa-3197-400d-af46-c420f656a09b"
+
+# 2. Find Foodora files in inbox
+settlement find "$COMPANY" --partner foodora
+# Returns JSON with grouped XLS+PDF pairs per invoice number
+
+# 3. Take the most recent settlement and parse it
+# (settlement find returns file IDs — use them)
+settlement parse "$COMPANY" --file-id "<xls_id>,<pdf_id>" --partner foodora
+# Returns parsed settlement with all amounts
+
+# 4. Check if we have a booking template
+settlement status
+
+# 5. If no template, learn from historical vouchers
+settlement learn "$COMPANY" --partner foodora
+
+# 6. Propose the voucher
+settlement propose "$COMPANY" --partner foodora --file-id "<xls_id>,<pdf_id>"
+# Returns a balanced voucher proposal with debit/credit rows
+```
+
+Then present the proposal table to the user.
+
+### What Each Partner Sends
+
+| Partner | Files | How to identify |
+|---------|-------|----------------|
+| **Foodora** | `invoice-<nr>.XLS` + `Faktureringsdokument - <nr>.pdf` | Search inbox for "foodora". Paired by invoice number. |
+| **Wolt** | 3 PDFs: payout_report, sales_report, commission invoice | Search for "wolt". Grouped by date range in Comments. |
+| **Uber Eats** | 1 PDF per settlement | Search for "uber". Standalone files. |
+
+### CRITICAL RULES
+
+1. **ALWAYS use `settlement propose` for the final voucher.** NEVER construct voucher rows manually. The propose tool handles the complex Foodora two-part invoice structure correctly. If you build it yourself, you WILL get the amounts wrong.
+
+2. **Do NOT add commission as a separate debit line.** Foodora's commission is already deducted BEFORE Part 1 totals. The receivable to clear = Part 1 total (NOT gross sales minus commission).
+
+3. **Do NOT tell the user to upload files.** The files are already in the IFN inbox (synced from Fortnox). `settlement find` searches the inbox and `settlement parse` downloads and parses them automatically.
+
+4. **Present the `settlement propose` output directly.** Format the JSON voucher_rows as a readable table. Do not recalculate or adjust the amounts.
+
+---
+
+## Delivery Partner Settlement Workflow
+
+You can analyze and propose bookkeeping for delivery partner settlements (Foodora, Wolt, Uber Eats).
+
+### Supported Partners
+
+| Partner | File Type | Parsing | Notes |
+|---------|-----------|---------|-------|
+| Foodora | XLS (data) + PDF (attachment) | `parse_foodora_xls.py` | XLS has order-level detail with IDs |
+| Wolt | 3 PDFs per settlement period | `parse_wolt.py` | Payout + Sales + Commission invoice |
+| Uber Eats | 1 PDF per settlement | `parse_ubereats.py` | Daily aggregate breakdown |
+
+### Step-by-Step: Settlement Proposal
+
+1. **Identify the company.** Use the company from chat context, or ask the user. For "all companies", loop through `ifn companies list`.
+
+2. **Find settlement files in inbox.**
+   ```bash
+   # Search inbox for partner files
+   ifn browse inbox <conn_id> --search foodora --format json
+   ifn browse inbox <conn_id> --search wolt --format json
+   ifn browse inbox <conn_id> --search uber --format json
+   ```
+   - **Foodora:** Match `invoice-<number>.XLS` + `Faktureringsdokument - <number>.pdf` by shared invoice number
+   - **Wolt:** Match 3 files by date range in Comments field. Filename patterns: `*__payout_report__*`, `*__sales_report__*`, `*_00_00_00.000_*.pdf`
+   - **Uber Eats:** Each PDF is standalone
+
+3. **Download and parse settlement files.**
+   ```bash
+   # Download file from inbox
+   ifn browse inbox-file <conn_id> <file_id> > /tmp/settlement_file
+
+   # Parse per partner
+   python3 ~/.ifn/parsers/parse_foodora_xls.py /tmp/foodora.xls
+   python3 ~/.ifn/parsers/parse_wolt.py /tmp/payout.pdf /tmp/sales.pdf /tmp/commission.pdf
+   python3 ~/.ifn/parsers/parse_ubereats.py /tmp/ubereats.pdf
+   ```
+   Each parser outputs normalized JSON to stdout.
+
+4. **Check booking template cache.**
+   ```bash
+   # Check if template exists and is fresh (< 90 days old)
+   cat ~/.ifn/booking-templates/<partner>.json
+   ```
+   If missing or expired, learn from historical vouchers (see below).
+
+5. **Build the voucher proposal.** Apply the cached template to the parsed settlement data:
+   - Map each settlement line item to the correct Fortnox account
+   - Calculate debit/credit amounts
+   - Verify: sum(debits) == sum(credits)
+   - Include source file references and deep links
+
+6. **Present the proposal in chat.** Use this format:
+   ```
+   Settlement Proposal: <Partner> — <Restaurant>
+   Period: <from> – <to>
+   Invoice: <number>
+   Source: <filename> [deep link]
+
+   ┌─────────────────────────────┬────────┬─────────┬─────────┐
+   │ Description                 │ Account│  Debit  │ Credit  │
+   ├─────────────────────────────┼────────┼─────────┼─────────┤
+   │ <rows...>                   │        │         │         │
+   ├─────────────────────────────┼────────┼─────────┼─────────┤
+   │ TOTAL                       │        │ X,XXX.XX│ X,XXX.XX│ ✓ Balanced
+   └─────────────────────────────┴────────┴─────────┴─────────┘
+
+   Reasoning: Based on template learned from voucher <ref>.
+   Confidence: HIGH/MEDIUM/LOW — <explanation>
+   ```
+
+### Account Mapping Management
+
+Account mappings define which Fortnox accounts to use for each voucher line. They are stored per partner with defaults and per-company overrides.
+
+#### Discover accounts (first time for a company)
+
+```bash
+settlement discover-accounts <company_id> --partner foodora
+```
+
+This scans the company's chart of accounts and proposes a mapping. It runs automatically on first `settlement propose` if no mapping exists.
+
+#### Show current mapping
+
+```bash
+settlement mapping show <company_id> --partner foodora
+```
+
+#### Update an account
+
+```bash
+settlement mapping set <company_id> --partner foodora --key receivable --account 1585
+```
+
+Valid keys: `receivable`, `fees`, `input_vat`, `output_vat_6`, `bank`, `rounding`, `correction_6`, `correction_12`, `correction_25`
+
+#### Confirm mapping
+
+```bash
+settlement mapping confirm <company_id> --partner foodora
+```
+
+#### Reset to defaults
+
+```bash
+settlement mapping reset <company_id> --partner foodora
+```
+
+### When to Confirm Mappings
+
+- After the first successful proposal for a company, if the user accepts it (says "looks good", "ser bra ut", "ok", "kör på", etc.) → call `settlement mapping confirm`
+- If the user corrects an account ("ändra kundfordran till 1585", "change receivable to 1585") → call `settlement mapping set` then `settlement mapping confirm`
+- **You MUST state what you're saving before calling confirm.** Say: "I'll save this account mapping for future Foodora settlements on Brödernas Borlänge."
+- If the user doesn't explicitly accept, do NOT confirm. The disclaimer will appear again next time.
+
+### Confidence Framework
+
+- **HIGH:** Amounts balanced, mapping confirmed for this company
+- **MEDIUM:** Amounts balanced, but mapping not yet confirmed — show disclaimer
+- **LOW:** Voucher doesn't balance, or parse error — flag for review
+
+### Multi-Company Processing
+
+When the user asks to process settlements for all companies:
+1. `ifn companies list` to get all connection IDs
+2. Loop through each, running the full settlement flow
+3. Present results grouped by company
+4. Flag any companies where mapping isn't confirmed
+
 - If `ifn health` fails, the IntrospectFN API is currently unreachable — tell the user and suggest they check service status in the admin dashboard
 - If `ifn auth status` shows "No API key configured" or `ifn companies list` fails with an auth error:
   1. **Wait 15 seconds and retry.** Credential delivery requires the daemon to poll (up to 30 seconds after setup completes).

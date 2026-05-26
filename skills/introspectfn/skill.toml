@@ -1,6 +1,6 @@
 [package]
 name = "introspectfn-erp"
-version = "0.2.6"
+version = "0.4.1"
 description = "Virtual accountant skill — ERP analysis, bookkeeping proposals, and financial insights via IntrospectFN"
 author = "Gentiq"
 icon = "📊"
@@ -89,6 +89,38 @@ complexity = "complex"
 description = "Analyze data and suggest ERP actions — missing bookings, unmatched invoices, reconciliation"
 triggers = ["suggest actions", "what should I book", "missing entries", "unmatched invoices", "reconcile", "what needs attention", "recommendations"]
 
+# --- Settlement tasks ---
+
+[routing.tasks.find_settlements]
+operation = "extract"
+complexity = "routine"
+description = "Search inbox for delivery partner settlement files (Foodora, Wolt, Uber Eats)"
+triggers = ["find settlements", "search settlements", "settlement files", "inbox settlements", "delivery partner files", "foodora settlement", "wolt settlement", "uber eats settlement"]
+
+[routing.tasks.parse_settlement]
+operation = "analyze"
+complexity = "routine"
+description = "Parse and extract structured data from settlement files"
+triggers = ["parse settlement", "read settlement", "extract settlement data", "interpret settlement"]
+
+[routing.tasks.settlement_proposal]
+operation = "reason"
+complexity = "complex"
+description = "Analyze delivery partner settlement and propose bookkeeping entries"
+triggers = ["settlement proposal", "propose settlement", "book settlement", "settlement bookkeeping", "avräkning", "delivery partner bookkeeping"]
+
+[routing.tasks.revenue_adjustment]
+operation = "reason"
+complexity = "complex"
+description = "Identify orders booked as revenue but not settled by delivery partner, propose adjustments"
+triggers = ["revenue adjustment", "cancelled orders", "missing settlements", "adjustment proposal", "unsettled orders", "intäktskorrigering"]
+
+[routing.tasks.learn_template]
+operation = "analyze"
+complexity = "moderate"
+description = "Learn booking patterns from historical vouchers for settlement account mapping"
+triggers = ["learn booking", "update template", "refresh template", "booking pattern", "learn accounts"]
+
 # --- Setup (bundled UI for dashboard) ---
 [setup]
 ui = "setup/index.html"
@@ -145,6 +177,6 @@ refresh_interval = 3600
 # --- Permissions ---
 [permissions]
 network = ["*:443"]
-tools = ["ifn", "ifn link"]
+tools = ["ifn", "ifn link", "settlement"]
 cron = true
 setup_ui = true

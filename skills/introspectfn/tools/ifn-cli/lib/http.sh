@@ -134,6 +134,30 @@ ifn_post() { ifn_http POST "$@"; }
 ifn_patch() { ifn_http PATCH "$@"; }
 ifn_delete() { ifn_http DELETE "$@"; }
 
+# Download binary file (e.g., PDF, XLS from inbox)
+# Usage: ifn_get_binary <path> > output_file
+ifn_get_binary() {
+    local path="$1"
+    local url="${IFN_BASE_URL}${path}"
+
+    local -a curl_args=(
+        -s -S
+        -o -
+        -X GET
+        -H "X-Bot-Client: ${IFN_USER_AGENT}"
+    )
+
+    if [ "$IFN_INSECURE" = "true" ]; then
+        curl_args+=(-k)
+    fi
+
+    if [ -n "$IFN_API_KEY" ]; then
+        curl_args+=(-H "Authorization: Bearer ${IFN_API_KEY}")
+    fi
+
+    curl "${curl_args[@]}" "$url"
+}
+
 # Upload a file (multipart)
 # Usage: ifn_upload <path> <file_path>
 ifn_upload() {
