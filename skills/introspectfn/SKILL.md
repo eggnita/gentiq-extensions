@@ -616,34 +616,34 @@ The context may also include:
 
 ---
 
-## Settlement Tool — USE THIS FOR ALL SETTLEMENT REQUESTS
+## Bookkeeping Tool (`ifn bk`) — USE THIS FOR ALL SETTLEMENT REQUESTS
 
-When a user asks about settling, booking, or processing delivery partner invoices (Foodora, Wolt, Uber Eats), **use the `settlement` CLI tool**. Do NOT try to manually browse vouchers and guess — the settlement tool has parsers that extract exact amounts.
+When a user asks about settling, booking, or processing delivery partner invoices (Foodora, Wolt, Uber Eats), **use the `ifn bk` commands**. Do NOT try to manually browse vouchers and guess — `ifn bk` has parsers that extract exact amounts.
 
 ### Quick Reference
 
 ```bash
 # Step 1: Find settlement files in the inbox
-settlement find <company_id> --partner foodora
-settlement find <company_id> --partner wolt
-settlement find <company_id> --partner ubereats
+ifn bk find <company_id> --partner foodora
+ifn bk find <company_id> --partner wolt
+ifn bk find <company_id> --partner ubereats
 
 # Step 2: Parse a settlement (Foodora needs XLS + PDF IDs comma-separated)
-settlement parse <company_id> --file-id <xls_id>,<pdf_id> --partner foodora
-settlement parse <company_id> --file-id <payout_id>,<sales_id>,<commission_id> --partner wolt
-settlement parse <company_id> --file-id <pdf_id> --partner ubereats
+ifn bk parse <company_id> --file-id <xls_id>,<pdf_id> --partner foodora
+ifn bk parse <company_id> --file-id <payout_id>,<sales_id>,<commission_id> --partner wolt
+ifn bk parse <company_id> --file-id <pdf_id> --partner ubereats
 
 # Step 3: Learn booking template (first time or if >90 days old)
-settlement learn <company_id> --partner foodora
+ifn bk learn <company_id> --partner foodora
 
 # Step 4: Build a balanced voucher proposal
-settlement propose <company_id> --partner foodora --file-id <xls_id>,<pdf_id>
+ifn bk propose <company_id> --partner foodora --file-id <xls_id>,<pdf_id>
 
 # Step 5 (Phase 2): Stage for approval
-settlement stage <company_id> --partner foodora --file-id <xls_id>,<pdf_id>
+ifn bk stage <company_id> --partner foodora --file-id <xls_id>,<pdf_id>
 
 # Check template cache status
-settlement status
+ifn bk status
 ```
 
 ### Example: "How should we settle the last Foodora invoice?"
@@ -655,22 +655,22 @@ Given context `{"company": "8538e1aa-...", "resource": "inbox"}`:
 COMPANY="8538e1aa-3197-400d-af46-c420f656a09b"
 
 # 2. Find Foodora files in inbox
-settlement find "$COMPANY" --partner foodora
+ifn bk find "$COMPANY" --partner foodora
 # Returns JSON with grouped XLS+PDF pairs per invoice number
 
 # 3. Take the most recent settlement and parse it
-# (settlement find returns file IDs — use them)
-settlement parse "$COMPANY" --file-id "<xls_id>,<pdf_id>" --partner foodora
+# (ifn bk find returns file IDs — use them)
+ifn bk parse "$COMPANY" --file-id "<xls_id>,<pdf_id>" --partner foodora
 # Returns parsed settlement with all amounts
 
 # 4. Check if we have a booking template
-settlement status
+ifn bk status
 
 # 5. If no template, learn from historical vouchers
-settlement learn "$COMPANY" --partner foodora
+ifn bk learn "$COMPANY" --partner foodora
 
 # 6. Propose the voucher
-settlement propose "$COMPANY" --partner foodora --file-id "<xls_id>,<pdf_id>"
+ifn bk propose "$COMPANY" --partner foodora --file-id "<xls_id>,<pdf_id>"
 # Returns a balanced voucher proposal with debit/credit rows
 ```
 
@@ -686,13 +686,13 @@ Then present the proposal table to the user.
 
 ### CRITICAL RULES
 
-1. **ALWAYS use `settlement propose` for the final voucher.** NEVER construct voucher rows manually. The propose tool handles the complex Foodora two-part invoice structure correctly. If you build it yourself, you WILL get the amounts wrong.
+1. **ALWAYS use `ifn bk propose` for the final voucher.** NEVER construct voucher rows manually. The propose tool handles the complex Foodora two-part invoice structure correctly. If you build it yourself, you WILL get the amounts wrong.
 
 2. **Do NOT add commission as a separate debit line.** Foodora's commission is already deducted BEFORE Part 1 totals. The receivable to clear = Part 1 total (NOT gross sales minus commission).
 
-3. **Do NOT tell the user to upload files.** The files are already in the IFN inbox (synced from Fortnox). `settlement find` searches the inbox and `settlement parse` downloads and parses them automatically.
+3. **Do NOT tell the user to upload files.** The files are already in the IFN inbox (synced from Fortnox). `ifn bk find` searches the inbox and `ifn bk parse` downloads and parses them automatically.
 
-4. **Present the `settlement propose` output directly.** Format the JSON voucher_rows as a readable table. Do not recalculate or adjust the amounts.
+4. **Present the `ifn bk propose` output directly.** Format the JSON voucher_rows as a readable table. Do not recalculate or adjust the amounts.
 
 ---
 
@@ -771,24 +771,32 @@ You can analyze and propose bookkeeping for delivery partner settlements (Foodor
 
 Account mappings define which Fortnox accounts to use for each voucher line. They are stored per partner with defaults and per-company overrides.
 
-#### Discover accounts (first time for a company)
+#### Suggesting account mappings (first time for a company)
 
+When a company has no mapping yet, YOU should analyze the accounts and suggest the mapping:
+
+1. Fetch the full chart of accounts: `ifn browse <company_id> accounts --format json`
+2. Use your accounting knowledge to identify the best accounts for each mapping key
+3. Present the proposed mapping to the user with your reasoning
+4. Ask: "Ska jag spara den här kontomappningen för Brödernas Borlänge, eller vill du ändra något?" / "Shall I save this mapping for Brödernas Borlänge, or do you want to change anything?"
+5. When the user confirms, call `ifn bk mapping set` for each account, then `ifn bk mapping confirm`
+
+You can also run the automatic discovery as a starting point:
 ```bash
-settlement discover-accounts <company_id> --partner foodora
+ifn bk discover-accounts <company_id> --partner foodora
 ```
-
-This scans the company's chart of accounts and proposes a mapping. It runs automatically on first `settlement propose` if no mapping exists.
+This scans the chart of accounts by pattern matching. Use it as a starting point, then refine with your accounting knowledge.
 
 #### Show current mapping
 
 ```bash
-settlement mapping show <company_id> --partner foodora
+ifn bk mapping show <company_id> --partner foodora
 ```
 
 #### Update an account
 
 ```bash
-settlement mapping set <company_id> --partner foodora --key receivable --account 1585
+ifn bk mapping set <company_id> --partner foodora --key receivable --account 1585
 ```
 
 Valid keys: `receivable`, `fees`, `input_vat`, `output_vat_6`, `bank`, `rounding`, `correction_6`, `correction_12`, `correction_25`
@@ -796,21 +804,32 @@ Valid keys: `receivable`, `fees`, `input_vat`, `output_vat_6`, `bank`, `rounding
 #### Confirm mapping
 
 ```bash
-settlement mapping confirm <company_id> --partner foodora
+ifn bk mapping confirm <company_id> --partner foodora
 ```
 
 #### Reset to defaults
 
 ```bash
-settlement mapping reset <company_id> --partner foodora
+ifn bk mapping reset <company_id> --partner foodora
 ```
 
 ### When to Confirm Mappings
 
-- After the first successful proposal for a company, if the user accepts it (says "looks good", "ser bra ut", "ok", "kör på", etc.) → call `settlement mapping confirm`
-- If the user corrects an account ("ändra kundfordran till 1585", "change receivable to 1585") → call `settlement mapping set` then `settlement mapping confirm`
+- After the first successful proposal for a company, if the user accepts it (says "looks good", "ser bra ut", "ok", "kör på", etc.) → call `ifn bk mapping confirm`
+- If the user corrects an account ("ändra kundfordran till 1585", "change receivable to 1585") → call `ifn bk mapping set` then `ifn bk mapping confirm`
 - **You MUST state what you're saving before calling confirm.** Say: "I'll save this account mapping for future Foodora settlements on Brödernas Borlänge."
 - If the user doesn't explicitly accept, do NOT confirm. The disclaimer will appear again next time.
+
+### Scope: This Company or All?
+
+When the user changes an account mapping, **always ask about scope**:
+
+> "Ska jag ändra detta bara för Brödernas Borlänge, eller för alla restauranger?"
+> / "Should I apply this change to Brödernas Borlänge only, or to all companies?"
+
+- **This company only** → call `ifn bk mapping set <company_id> --partner <p> --key <k> --account <n>` (sets an override)
+- **All companies** → update the default. If any company has an existing override for that key, call it out: "Brödernas Uppsala already has a custom override (account 1586) for this. Should I override that too, or keep it?"
+- **Confirm each exception explicitly** — never silently overwrite a company-specific override
 
 ### Confidence Framework
 

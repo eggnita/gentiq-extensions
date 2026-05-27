@@ -49,6 +49,7 @@ Commands:
   staging    list|list-all|get|propose|write-windows  Staging workflow
   auth       status|rotate                      API key status and rotation
   link       <type> <conn_id> [args]           Generate web app deep links
+  bk         find|parse|propose|mapping|...  Bookkeeping operations (settlements, adjustments)
   version                         Show CLI version
 
 Options:
@@ -149,6 +150,10 @@ case "$COMMAND" in
     link)
         source "${IFN_CLI_DIR}/commands/link.sh"
         cmd_link "$@"
+        ;;
+    bk)
+        source "${IFN_CLI_DIR}/commands/bk.sh"
+        cmd_bk "$@"
         ;;
     version|--version)
         ifn_version

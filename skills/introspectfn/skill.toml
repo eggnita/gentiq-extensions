@@ -1,6 +1,6 @@
 [package]
 name = "introspectfn-erp"
-version = "0.4.1"
+version = "0.5.0"
 description = "Virtual accountant skill — ERP analysis, bookkeeping proposals, and financial insights via IntrospectFN"
 author = "Gentiq"
 icon = "📊"
@@ -177,6 +177,6 @@ refresh_interval = 3600
 # --- Permissions ---
 [permissions]
 network = ["*:443"]
-tools = ["ifn", "ifn link", "settlement"]
+tools = ["ifn", "ifn link", "ifn bk"]
 cron = true
 setup_ui = true

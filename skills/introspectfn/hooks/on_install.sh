@@ -26,18 +26,18 @@ command -v curl >/dev/null 2>&1 || errors+=("curl not installed")
 command -v jq >/dev/null 2>&1 || errors+=("jq not installed")
 
 if [ ${#errors[@]} -eq 0 ]; then
-    # Make tools available in PATH
+    # Make ifn available in PATH (bk is a subcommand, no separate symlink needed)
     # Use /usr/local/bin (always in PATH) with fallback to ~/bin
     if [ -w /usr/local/bin ] || sudo -n true 2>/dev/null; then
         sudo ln -sf "${SKILL_ROOT}/tools/ifn" /usr/local/bin/ifn 2>/dev/null \
             || ln -sf "${SKILL_ROOT}/tools/ifn" /usr/local/bin/ifn 2>/dev/null
-        sudo ln -sf "${SKILL_ROOT}/tools/settlement" /usr/local/bin/settlement 2>/dev/null \
-            || ln -sf "${SKILL_ROOT}/tools/settlement" /usr/local/bin/settlement 2>/dev/null
     fi
     # Also create ~/bin as fallback
     mkdir -p "${HOME}/bin"
     ln -sf "${SKILL_ROOT}/tools/ifn" "${HOME}/bin/ifn"
-    ln -sf "${SKILL_ROOT}/tools/settlement" "${HOME}/bin/settlement"
+    # Clean up old standalone settlement symlink if present
+    rm -f "${HOME}/bin/settlement" 2>/dev/null
+    sudo rm -f /usr/local/bin/settlement 2>/dev/null || true
     if ! grep -q 'HOME/bin' "${HOME}/.bashrc" 2>/dev/null; then
         echo 'export PATH="$HOME/bin:$PATH"' >> "${HOME}/.bashrc"
     fi
