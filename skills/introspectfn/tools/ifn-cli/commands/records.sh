@@ -3,7 +3,7 @@
 
 cmd_records() {
     if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-        echo "Usage: ifn records <connection_id> <doc_type> [record_id] [options]"
+        echo "Usage: ifn records <company_id> <doc_type> [record_id] [options]"
         echo ""
         echo "Browse locally synced ERP records."
         echo ""
@@ -22,16 +22,16 @@ cmd_records() {
         return
     fi
 
-    ifn_require_arg "${1:-}" "connection_id" "ifn records <connection_id> <doc_type> [id]"
-    ifn_require_arg "${2:-}" "doc_type" "ifn records <connection_id> <doc_type> [id]"
+    ifn_require_arg "${1:-}" "company_id" "ifn records <company_id> <doc_type> [id]"
+    ifn_require_arg "${2:-}" "doc_type" "ifn records <company_id> <doc_type> [id]"
 
-    local conn_id="$1"
+    local company_id="$1"
     local doc_type="$2"
     shift 2
 
     # Dispatch special subcommand
     if [ "$doc_type" = "files" ]; then
-        _records_files "$conn_id" "$@"
+        _records_files "$company_id" "$@"
         return
     fi
 
@@ -44,18 +44,22 @@ cmd_records() {
 
     # Parse options
     local page="" limit="" fy="" include_staged="false" refresh="false"
+    local email="" phone="" referencenumber=""
     while [ $# -gt 0 ]; do
         case "$1" in
-            --page)            page="$2"; shift 2 ;;
-            --limit)           limit="$2"; shift 2 ;;
-            --fy)              fy="$2"; shift 2 ;;
-            --include-staged)  include_staged="true"; shift ;;
-            --refresh)         refresh="true"; shift ;;
-            *)                 shift ;;
+            --page)              page="$2"; shift 2 ;;
+            --limit)             limit="$2"; shift 2 ;;
+            --fy)                fy="$2"; shift 2 ;;
+            --include-staged)    include_staged="true"; shift ;;
+            --refresh)           refresh="true"; shift ;;
+            --email)             email="$2"; shift 2 ;;
+            --phone)             phone="$2"; shift 2 ;;
+            --referencenumber)   referencenumber="$2"; shift 2 ;;
+            *)                   shift ;;
         esac
     done
 
-    local path="/api/companies/${conn_id}/internal/${doc_type}"
+    local path="/api/companies/${company_id}/internal/${doc_type}"
 
     if [ -n "$record_id" ] && [ -n "$fy" ]; then
         # FY-in-path: /internal/{doc_type}/FY-{fy}/{record_id}
@@ -81,6 +85,9 @@ cmd_records() {
     [ -n "$page" ] && qs="${qs}&page=${page}"
     [ -n "$limit" ] && qs="${qs}&limit=${limit}"
     [ "$include_staged" = "true" ] && qs="${qs}&include_staged=true"
+    [ -n "$email" ] && qs="${qs}&email=${email}"
+    [ -n "$phone" ] && qs="${qs}&phone=${phone}"
+    [ -n "$referencenumber" ] && qs="${qs}&referencenumber=${referencenumber}"
 
     if [ -n "$qs" ]; then
         path="${path}?${qs:1}"
@@ -93,7 +100,7 @@ cmd_records() {
 
 # List synced file attachments
 _records_files() {
-    local conn_id="$1"
+    local company_id="$1"
     shift
 
     local page="" limit="" doc_type="" search=""
@@ -113,7 +120,7 @@ _records_files() {
     [ -n "$doc_type" ] && qs="${qs}&doc_type=${doc_type}"
     [ -n "$search" ] && qs="${qs}&search=${search}"
 
-    local path="/api/companies/${conn_id}/internal/files"
+    local path="/api/companies/${company_id}/internal/files"
     if [ -n "$qs" ]; then
         path="${path}?${qs:1}"
     fi

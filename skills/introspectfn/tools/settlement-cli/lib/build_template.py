@@ -95,7 +95,7 @@ def main():
 
     template = {
         "partner": args.partner,
-        "connection_id": args.company_id,
+        "company_id": args.company_id,
         "learned_from_vouchers": voucher_refs[:3],
         "learned_at": datetime.utcnow().isoformat() + "Z",
         "ttl_days": 90,

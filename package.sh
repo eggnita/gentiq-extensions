@@ -141,10 +141,12 @@ ARCHIVE_PATH="${DIST_DIR}/${ARCHIVE_NAME}"
 
 # Exclude docs/ directory (API specs are reference material, not part of the deployed skill)
 # Exclude config/ examples (credentials are managed via GentiqOS admin)
+# Exclude tests/ directory (test infrastructure is not part of the deployed skill)
 tar -czf "$ARCHIVE_PATH" \
     -C "$SKILLS_DIR" \
     --exclude="${SKILL_NAME}/docs" \
     --exclude="${SKILL_NAME}/config" \
+    --exclude="${SKILL_NAME}/tests" \
     --exclude='.DS_Store' \
     --exclude='__pycache__' \
     --exclude='*.pyc' \

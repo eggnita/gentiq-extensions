@@ -346,7 +346,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             for c in companies if isinstance(companies, list) else []:
                 name = c.get("name", "?")
                 org = c.get("org_number", "")
-                conn = c.get("connection_id", "")[:12]
+                conn = c.get("company_id", "")[:12]
                 rows += f'<div class="kv"><span class="k">{name}</span><span class="v">{org} &middot; {conn}...</span></div>'
             if not rows:
                 rows = "<p style='color:#888;font-size:0.85rem'>No companies or unexpected format</p>"

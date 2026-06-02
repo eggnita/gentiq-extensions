@@ -81,7 +81,7 @@ def cmd_companies():
         companies = body if isinstance(body, list) else body.get("companies", body)
         if isinstance(companies, list):
             for c in companies:
-                print(f"  - {c.get('name', '?')} ({c.get('connection_id', '?')})")
+                print(f"  - {c.get('name', '?')} ({c.get('company_id', '?')})")
         else:
             print(f"  Response: {json.dumps(body, indent=2)[:500]}")
     else:

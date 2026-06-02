@@ -68,8 +68,26 @@ ifn_debug() {
     fi
 }
 
+# Split a record ID that may contain an FY segment (e.g. "FY-1/A123")
+# Sets IFN_FY_SEGMENT and IFN_RECORD_ID.
+# If no "/" is present, IFN_FY_SEGMENT is empty and IFN_RECORD_ID is the original.
+# Usage: ifn_split_fy_path "FY-1/A123"
+#        echo "$IFN_FY_SEGMENT"  # → "FY-1"
+#        echo "$IFN_RECORD_ID"   # → "A123"
+ifn_split_fy_path() {
+    local input="$1"
+    if [[ "$input" == */* ]]; then
+        IFN_FY_SEGMENT="${input%%/*}"
+        IFN_RECORD_ID="${input#*/}"
+    else
+        IFN_FY_SEGMENT=""
+        IFN_RECORD_ID="$input"
+    fi
+    export IFN_FY_SEGMENT IFN_RECORD_ID
+}
+
 # Require a positional argument or print usage and exit
-# Usage: ifn_require_arg "$1" "connection_id" "ifn dashboard <connection_id>"
+# Usage: ifn_require_arg "$1" "company_id" "ifn dashboard <company_id>"
 ifn_require_arg() {
     local value="${1:-}"
     local name="$2"

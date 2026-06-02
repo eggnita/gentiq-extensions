@@ -41,14 +41,15 @@ Usage: ifn <command> [subcommand] [options]
 Commands:
   health                          Check API connectivity
   companies  list                 List connected ERP companies
-  dashboard  <connection_id>      Dashboard metrics for a company
-  browse     <conn_id> <resource> [id]  Browse live ERP records
-  records    <conn_id> <doc_type> [id]  Browse synced local records
+  dashboard  <company_id>         Dashboard metrics for a company
+  browse     <company_id> <resource> [id]  Browse live ERP records
+  records    <company_id> <doc_type> [id]  Browse synced local records
+  files      list|fetch|refresh|categories|...  File management
   analysis   accounts|balances|integrity|series  Financial analysis
   sync       status|overview|years|trigger|cancel  Sync management
   staging    list|list-all|get|propose|write-windows  Staging workflow
   auth       status|rotate                      API key status and rotation
-  link       <type> <conn_id> [args]           Generate web app deep links
+  link       <type> <company_id> [args]         Generate web app deep links
   bk         find|parse|propose|mapping|...  Bookkeeping operations (settlements, adjustments)
   version                         Show CLI version
 
@@ -150,6 +151,18 @@ case "$COMMAND" in
     link)
         source "${IFN_CLI_DIR}/commands/link.sh"
         cmd_link "$@"
+        ;;
+    files)
+        source "${IFN_CLI_DIR}/commands/files.sh"
+        cmd_files "$@"
+        ;;
+    xcompanies)
+        source "${IFN_CLI_DIR}/commands/xcompanies.sh"
+        cmd_xcompanies "$@"
+        ;;
+    jobs)
+        source "${IFN_CLI_DIR}/commands/jobs.sh"
+        cmd_jobs "$@"
         ;;
     bk)
         source "${IFN_CLI_DIR}/commands/bk.sh"

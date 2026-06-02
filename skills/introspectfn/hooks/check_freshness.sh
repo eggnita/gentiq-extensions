@@ -37,7 +37,7 @@ result=$(echo "$companies_resp" | jq --argjson threshold "$stale_threshold" '
     (if type == "array" then . else [.] end) |
     map({
         name: (.name // .company_name // "unknown"),
-        connection_id: (.connection_id // ""),
+        company_id: (.company_id // ""),
         last_sync: (.last_sync // .updated_at // null),
         stale: (
             if (.last_sync // .updated_at // null) then

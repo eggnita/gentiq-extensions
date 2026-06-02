@@ -36,38 +36,71 @@ ifn <command> [subcommand] [options]
 | `ifn auth status` | Verify API key is valid |
 | `ifn auth rotate` | Self-rotate the API key |
 | `ifn companies list` | List connected ERP companies |
-| `ifn dashboard <connection_id>` | Dashboard metrics for a company |
-| `ifn browse <connection_id> <resource>` | Browse live ERP records |
-| `ifn browse <connection_id> <resource> <id>` | Get a specific ERP record |
-| `ifn browse <connection_id> account-info <number>` | Get account description by number |
-| `ifn browse <connection_id> fileconnections --entity <type>` | List file attachments for an entity |
-| `ifn browse <connection_id> file-counts --entity <type>` | Batch file-connection counts |
-| `ifn browse <connection_id> archive <file_id>` | Download an archive file |
-| `ifn browse <connection_id> inbox [folder_id]` | List ERP inbox or folder contents |
-| `ifn browse <connection_id> inbox-file <file_id>` | Download an inbox file |
-| `ifn records <connection_id> <doc_type>` | Browse locally synced records |
-| `ifn records <connection_id> <doc_type> <id>` | Get a specific synced record |
-| `ifn records <connection_id> files` | List synced file attachments |
-| `ifn analysis accounts <connection_id>` | Vouchers grouped by account |
-| `ifn analysis balances <connection_id> <account>` | Account balance across years |
-| `ifn analysis integrity <connection_id>` | Data integrity check |
-| `ifn analysis series <connection_id>` | Voucher series mapping |
-| `ifn sync status <connection_id>` | Check sync status |
+| `ifn dashboard <company_id>` | Dashboard metrics for a company |
+| `ifn browse <company_id> <resource>` | Browse live ERP records |
+| `ifn browse <company_id> <resource> <id>` | Get a specific ERP record |
+| `ifn browse <company_id> account-info <number>` | Get account description by number |
+| `ifn browse <company_id> fileconnections --entity <type>` | List file attachments for an entity |
+| `ifn browse <company_id> file-counts --entity <type>` | Batch file-connection counts |
+| `ifn browse <company_id> archive <file_id>` | Download an archive file |
+| `ifn browse <company_id> inbox [folder_id]` | List ERP inbox or folder contents |
+| `ifn browse <company_id> inbox-file <file_id>` | Download an inbox file |
+| `ifn records <company_id> <doc_type>` | Browse locally synced records |
+| `ifn records <company_id> <doc_type> <id>` | Get a specific synced record |
+| `ifn records <company_id> files` | List synced file attachments |
+| `ifn analysis accounts <company_id>` | Vouchers grouped by account |
+| `ifn analysis balances <company_id> <account>` | Account balance across years |
+| `ifn analysis integrity <company_id>` | Data integrity check |
+| `ifn analysis series <company_id>` | Voucher series mapping |
+| `ifn sync status <company_id>` | Check sync status |
 | `ifn sync overview` | Global sync status across companies |
-| `ifn sync years <connection_id>` | List financial years |
-| `ifn sync trigger <connection_id>` | Trigger ERP sync (accountant+) |
-| `ifn sync cancel <connection_id> <job_id>` | Cancel a running sync job |
-| `ifn staging list <connection_id>` | List staged actions for a company |
+| `ifn sync years <company_id>` | List financial years |
+| `ifn sync trigger <company_id>` | Trigger ERP sync (accountant+) |
+| `ifn sync cancel <company_id> <job_id>` | Cancel a running sync job |
+| `ifn staging list <company_id>` | List staged actions for a company |
 | `ifn staging list-all` | List all staged actions across companies |
 | `ifn staging get <action_id>` | Get details of a staged action |
-| `ifn staging propose <connection_id> <json_file>` | Propose a new staged action |
+| `ifn staging propose <company_id> <json_file>` | Propose a new staged action |
 | `ifn staging edit <action_id> <json_file>` | Edit own staged action |
 | `ifn staging clone <action_id>` | Clone an existing staged action |
 | `ifn staging reject <action_id>` | Withdraw own staged action |
-| `ifn staging next-number <connection_id>` | Get predicted next voucher number |
-| `ifn staging upload <connection_id> <file>` | Upload file for attachment |
-| `ifn staging write-windows <connection_id>` | List write windows for a company |
-| `ifn link <type> <connection_id> [args]` | Generate deep link to web app |
+| `ifn staging next-number <company_id>` | Get predicted next voucher number |
+| `ifn staging upload <company_id> <file>` | Upload file for attachment |
+| `ifn staging write-windows <company_id>` | List write windows for a company |
+| `ifn staging archive [--action-id <id>]` | Archive rejected/failed actions |
+| `ifn staging file-refs <action_id> --data <json>` | Replace file refs on a staged action |
+| `ifn staging uploads <action_id>` | List staged uploads for an action |
+| `ifn staging upload-action <action_id> <file>` | Upload file to a specific action |
+| `ifn staging remove-upload <action_id> <file_id>` | Remove a staged upload |
+| `ifn files list <company_id> [options]` | List synced file attachments (with filters) |
+| `ifn files fetch <company_id> <file_id>` | Download file to temp path (local) |
+| `ifn files fetch <company_id> <file_id> --live` | Download file from Fortnox directly |
+| `ifn files refresh <company_id> <file_id>` | Re-download file from Fortnox into local storage |
+| `ifn files categories <company_id>` | List file categories with counts |
+| `ifn files groups <company_id> [group_id]` | List groups or files in a group |
+| `ifn files inbox-folders <company_id>` | Inbox folder breakdown |
+| `ifn files refs <company_id> <file_id>` | List ERP records referencing a file |
+| `ifn files metadata <company_id> <file_id> [options]` | Set file category/group/details |
+| `ifn xcompanies summary` | Cross-company section counts |
+| `ifn xcompanies vouchers [options]` | Cross-company voucher list |
+| `ifn xcompanies invoices [options]` | Cross-company invoice list |
+| `ifn xcompanies supplierinvoices [options]` | Cross-company supplier-invoice list |
+| `ifn xcompanies suppliers [options]` | Cross-company supplier list |
+| `ifn xcompanies customers [options]` | Cross-company customer list |
+| `ifn xcompanies accounts [options]` | Cross-company account list |
+| `ifn xcompanies files [options]` | Cross-company file list |
+| `ifn xcompanies files-categories` | Cross-company category directory |
+| `ifn xcompanies files-groups` | Cross-company group directory |
+| `ifn sync batch` | Trigger sync across all companies |
+| `ifn sync cancel-all <company_id>` | Cancel all running sync jobs |
+| `ifn companies doc-types <company_id>` | List allowed doc types for a company |
+| `ifn browse <company_id> record-counts` | Live record counts from Fortnox |
+| `ifn jobs sync <job_id>` | Sync job details (developer role) |
+| `ifn jobs sync-log <job_id>` | Sync job log (developer role) |
+| `ifn jobs list <company_id>` | List copy/purge jobs (developer role) |
+| `ifn jobs stale` | Preview stale jobs (developer role) |
+| `ifn jobs restart-history` | Server restart events (developer role) |
+| `ifn link <type> <company_id> [args]` | Generate deep link to web app |
 
 ## Deep Linking
 
@@ -77,29 +110,29 @@ When referring to specific ERP entities (vouchers, invoices, staging actions, et
 
 ```bash
 # Voucher detail (include financial year for correct lookup)
-ifn link voucher <conn_id> A 42 --fy 6
-# → <IFN_WEB_URL>/company/<conn_id>/vouchers/FY-6/A/42
+ifn link voucher <company_id> A 42 --fy 6
+# → <IFN_WEB_URL>/company/<company_id>/vouchers/FY-6/A/42
 
 # Invoice detail
-ifn link invoice <conn_id> 1234
-# → <IFN_WEB_URL>/company/<conn_id>/invoices/1234
+ifn link invoice <company_id> 1234
+# → <IFN_WEB_URL>/company/<company_id>/invoices/1234
 
 # Supplier invoice detail
-ifn link supplier-invoice <conn_id> 567
-# → <IFN_WEB_URL>/company/<conn_id>/supplierinvoices/567
+ifn link supplier-invoice <company_id> 567
+# → <IFN_WEB_URL>/company/<company_id>/supplierinvoices/567
 
 # Staging action
-ifn link staging <conn_id> 15
-# → <IFN_WEB_URL>/company/<conn_id>/staging/15
+ifn link staging <company_id> 15
+# → <IFN_WEB_URL>/company/<company_id>/staging/15
 
 # Account analysis with filters
-ifn link account-analysis <conn_id> --account 6110 --from 2025-01-01 --to 2025-12-31
+ifn link account-analysis <company_id> --account 6110 --from 2025-01-01 --to 2025-12-31
 
 # Voucher list with date filter
-ifn link vouchers <conn_id> --fy 6 --from 2025-06-01 --to 2025-06-30
+ifn link vouchers <company_id> --fy 6 --from 2025-06-01 --to 2025-06-30
 
 # Integrity check page
-ifn link integrity <conn_id>
+ifn link integrity <company_id>
 ```
 
 ### When to Include Deep Links
@@ -128,23 +161,45 @@ I've created a correction proposal: [Staging #15](<IFN_WEB_URL>/company/abc-123/
 
 ### 1. Identify the Company
 
-Always start by listing companies to identify the right `connection_id`:
+Always start by listing companies to identify the right `company_id`:
 
 ```
 ifn companies list
 ```
 
-Pick the company the user is asking about. Use `connection_id` (UUID) for all subsequent commands.
+Pick the company the user is asking about. Use `company_id` (UUID) for all subsequent commands.
+
+You can also check what doc types the company's Fortnox scopes allow:
+```
+ifn companies doc-types <company_id>
+```
 
 ### 2. Assess Current State
 
 Before any analysis, get the dashboard:
 
 ```
-ifn dashboard <connection_id>
+ifn dashboard <company_id>
 ```
 
 This tells you: unbooked vouchers, pending staged actions, sync freshness, and enrichment status. If data is stale, tell the user and suggest they trigger a sync from the web UI (syncing requires accountant+ role).
+
+You can also compare local vs live counts to see if sync is complete:
+```
+ifn browse <company_id> record-counts
+```
+
+To sync all companies at once or cancel stuck sync jobs:
+```
+ifn sync batch                           # trigger sync for all companies
+ifn sync cancel-all <company_id>          # cancel all running jobs for a company
+```
+
+For cross-company overview:
+```
+ifn xcompanies summary                    # section counts across all companies
+ifn xcompanies vouchers --from-date 2025-01-01 --to-date 2025-06-30
+```
 
 ### 3. Analyze
 
@@ -154,13 +209,33 @@ Use the analysis commands to understand the financial picture:
 - **Balance review** — shows an account's balance across financial years. Good for trend analysis and period-over-period comparison.
 - **Integrity check** — flags data inconsistencies. Always run this before proposing corrections.
 - **Browse records** — drill into specific vouchers, invoices, or supplier invoices for detail.
+- **Record filters** — use `--email`, `--phone`, `--referencenumber` to search customers/suppliers.
+- **Include staged** — use `--include-staged` on `analysis accounts` to see how pending proposals affect balances.
+
+### FY-in-Path Routing
+
+When looking up records that are keyed by financial year (like vouchers), you can include the FY directly in the record ID:
+
+```bash
+# These are equivalent:
+ifn records <company_id> vouchers 42 --fy 1
+ifn records <company_id> vouchers FY-1/42
+
+# Same for browse:
+ifn browse <company_id> vouchers FY-1/A123
+
+# And account lookup:
+ifn browse <company_id> account-info FY-1/1930
+```
+
+The CLI automatically detects the `/` in the ID and routes to the FY-in-path endpoint variant. This matches how the settlement CLI references vouchers (e.g. `FY-1/A123`).
 
 ### 4. Propose Actions
 
 When you identify something that needs booking, use the staging system:
 
 ```
-ifn staging propose <connection_id> <json_file>
+ifn staging propose <company_id> <json_file>
 ```
 
 The JSON file should contain a staging action with all required fields. See the "Proposing Vouchers" section below.
@@ -175,13 +250,13 @@ To check what files are attached to a voucher, invoice, or supplier invoice:
 
 ```bash
 # List files attached to a specific invoice
-ifn browse <conn_id> fileconnections --entity invoices --number 1234
+ifn browse <company_id> fileconnections --entity invoices --number 1234
 
 # List files attached to a voucher (requires series and financial year)
-ifn browse <conn_id> fileconnections --entity vouchers --number 42 --series A --fy 6
+ifn browse <company_id> fileconnections --entity vouchers --number 42 --series A --fy 6
 
 # List files attached to a supplier invoice
-ifn browse <conn_id> fileconnections --entity supplierinvoices --number 567
+ifn browse <company_id> fileconnections --entity supplierinvoices --number 567
 ```
 
 This returns a list of `FileConnection` objects, each with a `file_id`, `name`, and `source`.
@@ -192,10 +267,10 @@ To see how many files are attached across all records of a given type:
 
 ```bash
 # Get file counts for all invoices
-ifn browse <conn_id> file-counts --entity invoices
+ifn browse <company_id> file-counts --entity invoices
 
 # Get file counts for vouchers in a specific financial year
-ifn browse <conn_id> file-counts --entity vouchers --fy 6
+ifn browse <company_id> file-counts --entity vouchers --fy 6
 ```
 
 Returns `{record_number: file_count}` — useful for spotting invoices or vouchers that are missing documentation.
@@ -206,24 +281,67 @@ To search across all locally synced file attachments:
 
 ```bash
 # List all synced files
-ifn records <conn_id> files
+ifn records <company_id> files
 
 # Filter by document type
-ifn records <conn_id> files --doc-type invoices
+ifn records <company_id> files --doc-type invoices
 
 # Search by filename
-ifn records <conn_id> files --search "receipt"
+ifn records <company_id> files --search "receipt"
 ```
 
 ### Downloading a File
 
-To download an archive file by its `file_id` (obtained from `fileconnections`):
+Use the `ifn files fetch` command to download a file to a temp path. The command prints the temp file path to stdout so you can reference it in conversation.
 
 ```bash
-ifn browse <conn_id> archive <file_id>
+# Download from local storage (fast, recommended)
+ifn files fetch <company_id> <file_id>
+# Output: /tmp/ifn-<file_id>
+
+# Download directly from Fortnox (slower, use if local copy is stale)
+ifn files fetch <company_id> <file_id> --live
+
+# If the local copy is stale, re-download from Fortnox first
+ifn files refresh <company_id> <file_id>
+# Then fetch the updated local copy
+ifn files fetch <company_id> <file_id>
 ```
 
-This streams the binary file content. Note: the CLI outputs raw binary — this is mainly useful for verification, not for display.
+The file is saved to a temp path (e.g. `/tmp/ifn-abc123`). You can then read or reference this file in your response.
+
+### Browsing and Categorizing Files
+
+The `ifn files` command group provides rich file management:
+
+```bash
+# List all synced files with filters
+ifn files list <company_id> --doc-type invoices --search "faktura" --category incoming
+ifn files list <company_id> --needs-categorization   # find uncategorized files
+ifn files list <company_id> --voucher-series A --financial-year-id FY-1
+
+# Browse by category and group
+ifn files categories <company_id>           # list categories with counts
+ifn files groups <company_id>               # list groups with counts
+ifn files groups <company_id> <group_id>    # list files in a specific group
+ifn files inbox-folders <company_id>        # inbox folder breakdown
+
+# See what records reference a file
+ifn files refs <company_id> <file_id>
+
+# Tag/categorize a file
+ifn files metadata <company_id> <file_id> --category incoming --group-id grp-1
+```
+
+### Cross-Company File Views
+
+To search files across all connected companies:
+
+```bash
+ifn xcompanies files --search "settlement" --category incoming
+ifn xcompanies files-categories    # category directory across all companies
+ifn xcompanies files-groups        # group directory across all companies
+```
 
 ### ERP Inbox
 
@@ -231,23 +349,41 @@ The Fortnox inbox contains unprocessed documents (uploaded scans, emailed invoic
 
 ```bash
 # List inbox root
-ifn browse <conn_id> inbox
+ifn browse <company_id> inbox
 
 # List a specific folder
-ifn browse <conn_id> inbox <folder_id>
+ifn browse <company_id> inbox <folder_id>
 ```
 
 ### Attaching Files to Staging Proposals
 
 When proposing a voucher that should have file attachments:
 
-1. **Upload the file** first:
+1. **Upload the file** (company-scoped, before creating the action):
    ```bash
-   ifn staging upload <conn_id> /path/to/invoice.pdf
+   ifn staging upload <company_id> /path/to/invoice.pdf
    ```
    This returns a `file_id` and `filename`.
 
-2. **Reference the file** in the staging proposal using the `file_refs` field:
+2. **Or upload to an existing action** (action-scoped, after creating the action):
+   ```bash
+   ifn staging upload-action <action_id> /path/to/invoice.pdf
+   ```
+
+3. **Manage uploads on an action:**
+   ```bash
+   ifn staging uploads <action_id>                    # list uploads
+   ifn staging remove-upload <action_id> <file_id>    # remove an upload
+   ifn staging file-refs <action_id> --data '["file-id-1","file-id-2"]'  # replace file refs
+   ```
+
+4. **Archive rejected/failed actions:**
+   ```bash
+   ifn staging archive                  # bulk archive all rejected/failed
+   ifn staging archive --action-id 42   # archive a single action
+   ```
+
+5. **Reference the file** in the staging proposal using the `file_refs` field:
    ```json
    {
      "entity_type": "voucher",
@@ -267,10 +403,10 @@ Include links to the web app when referencing files:
 
 ```bash
 # Link to a specific file
-ifn link file <conn_id> <file_id>
+ifn link file <company_id> <file_id>
 
 # Link to the files browser
-ifn link files <conn_id> --doc-type invoices
+ifn link files <company_id> --doc-type invoices
 ```
 
 ### Source Document Verification
@@ -292,19 +428,20 @@ When investigating a specific entry — especially for corrections or anomaly re
 
 1. **Get the booked data** from ERP:
    ```bash
-   ifn browse <conn_id> invoices 1234
+   ifn browse <company_id> invoices 1234
    # or
-   ifn browse <conn_id> vouchers A/42 --fy 6
+   ifn browse <company_id> vouchers A/42 --fy 6
    ```
 
 2. **Check if a source file exists**:
    ```bash
-   ifn browse <conn_id> fileconnections --entity invoices --number 1234
+   ifn browse <company_id> fileconnections --entity invoices --number 1234
    ```
 
 3. **Retrieve and examine the file** (if attached):
    ```bash
-   ifn browse <conn_id> archive <file_id>
+   ifn files fetch <company_id> <file_id>
+   # Output: /tmp/ifn-<file_id>  — read this file to examine the content
    ```
 
 4. **Cross-reference** the file content against the booked data. Look for discrepancies in:
@@ -369,7 +506,7 @@ When proposing a voucher, you MUST include:
    - `VoucherRows` — array of rows, each with `Account`, `Debit`, `Credit`
 4. **`accounting_reasoning`**: Detailed explanation of WHY this entry is correct, including a **confidence assessment** and **complexity classification** (see "Confidence & Transparency Framework" below). Reference the relevant accounting standards, explain the account choices, and justify the amounts. This is what the human reviewer reads.
 5. **`notes`**: Short summary prefixed with confidence and complexity — e.g. `"HIGH CERTAINTY (95%) | SIMPLE — Staples office supplies June 2025"`
-6. **`financial_year_id`**: The financial year this voucher belongs to (get from `ifn sync years <connection_id>`)
+6. **`financial_year_id`**: The financial year this voucher belongs to (get from `ifn sync years <company_id>`)
 
 ### Example Proposals
 
@@ -457,7 +594,7 @@ When proposing a voucher, you MUST include:
   - **6570** — IT expenses (IT-tjänster)
   - **7210** — Salaries (Löner)
   - **7510** — Social fees (Sociala avgifter)
-- When unsure about an account, browse the company's account list: `ifn browse <conn_id> accounts`
+- When unsure about an account, browse the company's account list: `ifn browse <company_id> accounts`
 
 ## Confidence & Transparency Framework
 
@@ -570,7 +707,7 @@ This skill authenticates via **API key** (`IFN_API_KEY`), issued by an owner or 
 
 **All credentials are pre-configured automatically.** When this skill is pushed to a Gent, the GentiqOS admin dashboard sets `IFN_API_KEY` and `IFN_BASE_URL` as environment variables via the credential system. The OAuth provisioning flow (setup UI) handles key issuance. **You should never need to ask the user for API keys or URLs — just run `ifn` commands directly.**
 
-The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.2.6` for audit trail.
+The CLI sends `Authorization: Bearer <key>` on every request along with `X-Bot-Client: introspect-cli/0.5.1` for audit trail.
 
 ### SSL Certificate Validation
 
@@ -585,6 +722,27 @@ ifn auth rotate
 ```
 
 This performs self-service rotation: both old and new keys remain valid until the new key is first used for a normal API call, then the old key is burned. After rotation, update `IFN_API_KEY` in the GentiqOS admin dashboard with the new key.
+
+## Job Monitoring (Developer Role)
+
+If you have developer access, you can inspect sync and maintenance jobs:
+
+```bash
+# Check a specific sync job
+ifn jobs sync <job_id>
+ifn jobs sync-log <job_id>
+
+# List all copy/purge jobs for a company
+ifn jobs list <company_id> --limit 10
+
+# Check for stale/stuck jobs
+ifn jobs stale
+
+# Recent server restarts
+ifn jobs restart-history --limit 5
+```
+
+These commands require developer role. If you get a 403, the API key does not have developer access.
 
 ## Error Handling
 
@@ -606,7 +764,7 @@ The IFN webapp passes context into the conversation as a JSON object. It looks l
 }
 ```
 
-**Always use the `company` field as your connection_id.** Do NOT ask "which company?" if the context already provides it.
+**Always use the `company` field as your company_id.** Do NOT ask "which company?" if the context already provides it.
 
 The context may also include:
 - `file_id` — if the user is viewing a specific file
@@ -723,9 +881,9 @@ You can analyze and propose bookkeeping for delivery partner settlements (Foodor
 2. **Find settlement files in inbox.**
    ```bash
    # Search inbox for partner files
-   ifn browse inbox <conn_id> --search foodora --format json
-   ifn browse inbox <conn_id> --search wolt --format json
-   ifn browse inbox <conn_id> --search uber --format json
+   ifn browse inbox <company_id> --search foodora --format json
+   ifn browse inbox <company_id> --search wolt --format json
+   ifn browse inbox <company_id> --search uber --format json
    ```
    - **Foodora:** Match `invoice-<number>.XLS` + `Faktureringsdokument - <number>.pdf` by shared invoice number
    - **Wolt:** Match 3 files by date range in Comments field. Filename patterns: `*__payout_report__*`, `*__sales_report__*`, `*_00_00_00.000_*.pdf`
@@ -734,7 +892,7 @@ You can analyze and propose bookkeeping for delivery partner settlements (Foodor
 3. **Download and parse settlement files.**
    ```bash
    # Download file from inbox
-   ifn browse inbox-file <conn_id> <file_id> > /tmp/settlement_file
+   ifn browse inbox-file <company_id> <file_id> > /tmp/settlement_file
 
    # Parse per partner
    python3 ~/.ifn/parsers/parse_foodora_xls.py /tmp/foodora.xls

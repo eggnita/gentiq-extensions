@@ -203,7 +203,7 @@ for key, val in partner_accounts.items():
 
 template = {
     'partner': partner,
-    'connection_id': '${company_id}',
+    'company_id': '${company_id}',
     'learned_from_vouchers': [],
     'learned_at': datetime.utcnow().isoformat() + 'Z',
     'ttl_days': 90,

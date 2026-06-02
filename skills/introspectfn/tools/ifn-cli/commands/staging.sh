@@ -18,20 +18,30 @@ cmd_staging() {
         next-number)    _staging_next_number "$@" ;;
         upload)         _staging_upload "$@" ;;
         write-windows)  _staging_write_windows "$@" ;;
+        archive)        _staging_archive "$@" ;;
+        file-refs)      _staging_file_refs "$@" ;;
+        uploads)        _staging_uploads "$@" ;;
+        upload-action)  _staging_upload_action "$@" ;;
+        remove-upload)  _staging_remove_upload "$@" ;;
         --help|-h|"")
             echo "Usage: ifn staging <subcommand> [options]"
             echo ""
             echo "Subcommands:"
-            echo "  list          <conn_id>                List staged actions for a company"
+            echo "  list          <company_id>                List staged actions for a company"
             echo "  list-all                               List all staged actions across companies"
             echo "  get           <action_id>              Get details of a staged action"
-            echo "  propose       <conn_id> <json_file>    Propose a new staging action"
+            echo "  propose       <company_id> <json_file>    Propose a new staging action"
             echo "  edit          <action_id> <json_file>  Edit own staged action (payload, notes, reasoning)"
             echo "  clone         <action_id>              Clone a staged action"
             echo "  reject        <action_id>              Reject own staged action"
-            echo "  next-number   <conn_id> [options]      Get predicted next voucher number"
-            echo "  upload        <conn_id> <file_path>    Upload a file for attachment"
-            echo "  write-windows <conn_id>                List write windows for a company"
+            echo "  next-number   <company_id> [options]      Get predicted next voucher number"
+            echo "  upload        <company_id> <file_path>    Upload a file for attachment (company-scoped)"
+            echo "  write-windows <company_id>                List write windows for a company"
+            echo "  archive       [--action-id <id>]       Archive rejected/failed actions"
+            echo "  file-refs     <action_id> --data <json>  Replace file refs on a staged action"
+            echo "  uploads       <action_id>              List staged uploads for an action"
+            echo "  upload-action <action_id> <file_path>  Upload file to a specific action"
+            echo "  remove-upload <action_id> <file_id>    Remove a staged upload"
             echo ""
             echo "Next-number options:"
             echo "  --series <code>   Voucher series (default: A)"
@@ -45,11 +55,11 @@ cmd_staging() {
 }
 
 _staging_list() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn staging list <connection_id>"
-    local conn_id="$1"
+    ifn_require_arg "${1:-}" "company_id" "ifn staging list <company_id>"
+    local company_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/bk-staging") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/bk-staging") || return 1
     ifn_output "$result"
 }
 
@@ -69,10 +79,10 @@ _staging_get() {
 }
 
 _staging_propose() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn staging propose <connection_id> <json_file>"
-    ifn_require_arg "${2:-}" "json_file" "ifn staging propose <connection_id> <json_file>"
+    ifn_require_arg "${1:-}" "company_id" "ifn staging propose <company_id> <json_file>"
+    ifn_require_arg "${2:-}" "json_file" "ifn staging propose <company_id> <json_file>"
 
-    local conn_id="$1"
+    local company_id="$1"
     local json_file="$2"
 
     if [ ! -f "$json_file" ]; then
@@ -90,7 +100,7 @@ _staging_propose() {
     fi
 
     local result
-    result=$(ifn_post "/api/companies/${conn_id}/bk-staging" "$body") || return 1
+    result=$(ifn_post "/api/companies/${company_id}/bk-staging" "$body") || return 1
     ifn_output "$result"
 }
 
@@ -133,8 +143,8 @@ _staging_reject() {
 }
 
 _staging_next_number() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn staging next-number <connection_id>"
-    local conn_id="$1"
+    ifn_require_arg "${1:-}" "company_id" "ifn staging next-number <company_id>"
+    local company_id="$1"
     shift
 
     local series="A" fy=""
@@ -146,7 +156,7 @@ _staging_next_number() {
         esac
     done
 
-    local path="/api/companies/${conn_id}/bk-staging/next-number?series=${series}"
+    local path="/api/companies/${company_id}/bk-staging/next-number?series=${series}"
     [ -n "$fy" ] && path="${path}&financial_year_id=${fy}"
 
     local result
@@ -155,10 +165,10 @@ _staging_next_number() {
 }
 
 _staging_upload() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn staging upload <connection_id> <file_path>"
-    ifn_require_arg "${2:-}" "file_path" "ifn staging upload <connection_id> <file_path>"
+    ifn_require_arg "${1:-}" "company_id" "ifn staging upload <company_id> <file_path>"
+    ifn_require_arg "${2:-}" "file_path" "ifn staging upload <company_id> <file_path>"
 
-    local conn_id="$1"
+    local company_id="$1"
     local file_path="$2"
 
     if [ ! -f "$file_path" ]; then
@@ -167,15 +177,94 @@ _staging_upload() {
     fi
 
     local result
-    result=$(ifn_upload "/api/companies/${conn_id}/bk-staging/upload-file" "$file_path") || return 1
+    result=$(ifn_upload "/api/companies/${company_id}/bk-staging/upload-file" "$file_path") || return 1
     ifn_output "$result"
 }
 
 _staging_write_windows() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn staging write-windows <connection_id>"
-    local conn_id="$1"
+    ifn_require_arg "${1:-}" "company_id" "ifn staging write-windows <company_id>"
+    local company_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/write-windows") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/write-windows") || return 1
+    ifn_output "$result"
+}
+
+_staging_archive() {
+    local action_id=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --action-id) action_id="$2"; shift 2 ;;
+            *)           shift ;;
+        esac
+    done
+
+    local result
+    if [ -n "$action_id" ]; then
+        result=$(ifn_post "/api/bk-staging/${action_id}/archive") || return 1
+    else
+        result=$(ifn_post "/api/bk-staging/archive") || return 1
+    fi
+    ifn_output "$result"
+}
+
+_staging_file_refs() {
+    ifn_require_arg "${1:-}" "action_id" "ifn staging file-refs <action_id> --data <json>"
+    local action_id="$1"
+    shift
+
+    local data=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --data) data="$2"; shift 2 ;;
+            *)      shift ;;
+        esac
+    done
+
+    if [ -z "$data" ]; then
+        ifn_error "missing required option: --data <json>"
+        return 1
+    fi
+
+    local result
+    result=$(ifn_patch "/api/bk-staging/${action_id}/file-refs" "$data") || return 1
+    ifn_output "$result"
+}
+
+_staging_uploads() {
+    ifn_require_arg "${1:-}" "action_id" "ifn staging uploads <action_id>"
+    local action_id="$1"
+
+    local result
+    result=$(ifn_get "/api/bk-staging/${action_id}/uploads") || return 1
+    ifn_output "$result"
+}
+
+_staging_upload_action() {
+    ifn_require_arg "${1:-}" "action_id" "ifn staging upload-action <action_id> <file_path>"
+    ifn_require_arg "${2:-}" "file_path" "ifn staging upload-action <action_id> <file_path>"
+
+    local action_id="$1"
+    local file_path="$2"
+
+    if [ ! -f "$file_path" ]; then
+        ifn_error "file not found: $file_path"
+        return 1
+    fi
+
+    local result
+    result=$(ifn_upload "/api/bk-staging/${action_id}/upload-file" "$file_path") || return 1
+    ifn_output "$result"
+}
+
+_staging_remove_upload() {
+    ifn_require_arg "${1:-}" "action_id" "ifn staging remove-upload <action_id> <file_id>"
+    ifn_require_arg "${2:-}" "file_id" "ifn staging remove-upload <action_id> <file_id>"
+
+    local action_id="$1"
+    local file_id="$2"
+
+    local result
+    result=$(ifn_delete "/api/bk-staging/${action_id}/uploads/${file_id}") || return 1
     ifn_output "$result"
 }

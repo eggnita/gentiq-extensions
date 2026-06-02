@@ -3,7 +3,7 @@
 
 cmd_browse() {
     if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-        echo "Usage: ifn browse <connection_id> <resource> [record_id] [options]"
+        echo "Usage: ifn browse <company_id> <resource> [record_id] [options]"
         echo ""
         echo "Browse live ERP data via the Fortnox proxy."
         echo ""
@@ -29,21 +29,22 @@ cmd_browse() {
         return
     fi
 
-    ifn_require_arg "${1:-}" "connection_id" "ifn browse <connection_id> <resource> [id]"
-    ifn_require_arg "${2:-}" "resource" "ifn browse <connection_id> <resource> [id]"
+    ifn_require_arg "${1:-}" "company_id" "ifn browse <company_id> <resource> [id]"
+    ifn_require_arg "${2:-}" "resource" "ifn browse <company_id> <resource> [id]"
 
-    local conn_id="$1"
+    local company_id="$1"
     local resource="$2"
     shift 2
 
     # Dispatch special subcommands
     case "$resource" in
-        account-info)       _browse_account_info "$conn_id" "$@"; return ;;
-        fileconnections)    _browse_fileconnections "$conn_id" "$@"; return ;;
-        file-counts)        _browse_file_counts "$conn_id" "$@"; return ;;
-        archive)            _browse_archive "$conn_id" "$@"; return ;;
-        inbox)              _browse_inbox "$conn_id" "$@"; return ;;
-        inbox-file)         _browse_inbox_file "$conn_id" "$@"; return ;;
+        account-info)       _browse_account_info "$company_id" "$@"; return ;;
+        fileconnections)    _browse_fileconnections "$company_id" "$@"; return ;;
+        file-counts)        _browse_file_counts "$company_id" "$@"; return ;;
+        record-counts)      _browse_record_counts "$company_id" "$@"; return ;;
+        archive)            _browse_archive "$company_id" "$@"; return ;;
+        inbox)              _browse_inbox "$company_id" "$@"; return ;;
+        inbox-file)         _browse_inbox_file "$company_id" "$@"; return ;;
     esac
 
     # Default: external resource proxy
@@ -68,7 +69,7 @@ cmd_browse() {
         esac
     done
 
-    local path="/api/companies/${conn_id}/external/${resource}"
+    local path="/api/companies/${company_id}/external/${resource}"
 
     if [ -n "$record_id" ] && [ -n "$fy" ]; then
         # FY-in-path: /external/{resource}/FY-{fy}/{record_id}
@@ -98,19 +99,19 @@ cmd_browse() {
 
 # Get account description by number
 _browse_account_info() {
-    local conn_id="$1"
+    local company_id="$1"
     shift
-    ifn_require_arg "${1:-}" "account_number" "ifn browse <conn_id> account-info <account_number>"
+    ifn_require_arg "${1:-}" "account_number" "ifn browse <company_id> account-info <account_number>"
     local account_number="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/accounts/${account_number}") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/accounts/${account_number}") || return 1
     ifn_output "$result"
 }
 
 # List file connections (attachments) for an entity
 _browse_fileconnections() {
-    local conn_id="$1"
+    local company_id="$1"
     shift
 
     local entity="" number="" series="" fy=""
@@ -126,7 +127,7 @@ _browse_fileconnections() {
 
     if [ -z "$entity" ]; then
         ifn_error "missing required option: --entity <entity_type>"
-        echo "Usage: ifn browse <conn_id> fileconnections --entity <type> [--number <n>] [--series <s>] [--fy <id>]" >&2
+        echo "Usage: ifn browse <company_id> fileconnections --entity <type> [--number <n>] [--series <s>] [--fy <id>]" >&2
         return 1
     fi
 
@@ -136,13 +137,13 @@ _browse_fileconnections() {
     [ -n "$fy" ] && qs="${qs}&financialyear=${fy}"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/external/fileconnections?${qs}") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/external/fileconnections?${qs}") || return 1
     ifn_output "$result"
 }
 
 # Batch file-connection counts for an entity type
 _browse_file_counts() {
-    local conn_id="$1"
+    local company_id="$1"
     shift
 
     local entity="" fy=""
@@ -156,7 +157,7 @@ _browse_file_counts() {
 
     if [ -z "$entity" ]; then
         ifn_error "missing required option: --entity <entity_type>"
-        echo "Usage: ifn browse <conn_id> file-counts --entity <type> [--fy <id>]" >&2
+        echo "Usage: ifn browse <company_id> file-counts --entity <type> [--fy <id>]" >&2
         return 1
     fi
 
@@ -164,37 +165,37 @@ _browse_file_counts() {
     [ -n "$fy" ] && qs="${qs}&financialyear=${fy}"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/fileconnection-counts?${qs}") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/fileconnection-counts?${qs}") || return 1
     ifn_output "$result"
 }
 
 # Download an archive file
 _browse_archive() {
-    local conn_id="$1"
+    local company_id="$1"
     shift
-    ifn_require_arg "${1:-}" "file_id" "ifn browse <conn_id> archive <file_id>"
+    ifn_require_arg "${1:-}" "file_id" "ifn browse <company_id> archive <file_id>"
     local file_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/external/archive/${file_id}") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/external/archive/${file_id}") || return 1
     ifn_output "$result"
 }
 
 # Download an inbox file
 _browse_inbox_file() {
-    local conn_id="$1"
+    local company_id="$1"
     shift
-    ifn_require_arg "${1:-}" "file_id" "ifn browse <conn_id> inbox-file <file_id>"
+    ifn_require_arg "${1:-}" "file_id" "ifn browse <company_id> inbox-file <file_id>"
     local file_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/inbox/file/${file_id}") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/inbox/file/${file_id}") || return 1
     ifn_output "$result"
 }
 
 # List ERP inbox or folder contents
 _browse_inbox() {
-    local conn_id="$1"
+    local company_id="$1"
     shift
 
     local folder_id=""
@@ -203,12 +204,21 @@ _browse_inbox() {
         shift
     fi
 
-    local path="/api/companies/${conn_id}/inbox"
+    local path="/api/companies/${company_id}/inbox"
     if [ -n "$folder_id" ]; then
         path="${path}/${folder_id}"
     fi
 
     local result
     result=$(ifn_get "$path") || return 1
+    ifn_output "$result"
+}
+
+# Live record counts from Fortnox
+_browse_record_counts() {
+    local company_id="$1"
+
+    local result
+    result=$(ifn_get "/api/companies/${company_id}/external/record-counts") || return 1
     ifn_output "$result"
 }

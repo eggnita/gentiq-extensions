@@ -11,13 +11,13 @@ cmd_analysis() {
         integrity)  _analysis_integrity "$@" ;;
         series)     _analysis_series "$@" ;;
         --help|-h|"")
-            echo "Usage: ifn analysis <subcommand> <connection_id> [options]"
+            echo "Usage: ifn analysis <subcommand> <company_id> [options]"
             echo ""
             echo "Subcommands:"
-            echo "  accounts  <conn_id>              Vouchers grouped by account"
-            echo "  balances  <conn_id> <account_no>  Account balance across financial years"
-            echo "  integrity <conn_id>              Data integrity check"
-            echo "  series    <conn_id>              Voucher series → description mapping"
+            echo "  accounts  <company_id>              Vouchers grouped by account"
+            echo "  balances  <company_id> <account_no>  Account balance across financial years"
+            echo "  integrity <company_id>              Data integrity check"
+            echo "  series    <company_id>              Voucher series → description mapping"
             ;;
         *)
             ifn_error "unknown analysis subcommand: $subcmd"
@@ -27,21 +27,25 @@ cmd_analysis() {
 }
 
 _analysis_accounts() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn analysis accounts <connection_id>"
-    local conn_id="$1"
+    ifn_require_arg "${1:-}" "company_id" "ifn analysis accounts <company_id>"
+    local company_id="$1"
     shift
 
-    # Parse optional financial year
-    local fy=""
+    local fy="" include_staged="false"
     while [ $# -gt 0 ]; do
         case "$1" in
-            --fy) fy="$2"; shift 2 ;;
-            *)    shift ;;
+            --fy)              fy="$2"; shift 2 ;;
+            --include-staged)  include_staged="true"; shift ;;
+            *)                 shift ;;
         esac
     done
 
-    local path="/api/companies/${conn_id}/internal/account-analysis"
-    [ -n "$fy" ] && path="${path}?financial_year_id=${fy}"
+    local qs=""
+    [ -n "$fy" ] && qs="${qs}&financial_year_id=${fy}"
+    [ "$include_staged" = "true" ] && qs="${qs}&include_staged=true"
+
+    local path="/api/companies/${company_id}/internal/account-analysis"
+    [ -n "$qs" ] && path="${path}?${qs:1}"
 
     local result
     result=$(ifn_get "$path") || return 1
@@ -49,31 +53,31 @@ _analysis_accounts() {
 }
 
 _analysis_balances() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn analysis balances <connection_id> <account_number>"
-    ifn_require_arg "${2:-}" "account_number" "ifn analysis balances <connection_id> <account_number>"
+    ifn_require_arg "${1:-}" "company_id" "ifn analysis balances <company_id> <account_number>"
+    ifn_require_arg "${2:-}" "account_number" "ifn analysis balances <company_id> <account_number>"
 
-    local conn_id="$1"
+    local company_id="$1"
     local account_no="$2"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/internal/accounts/${account_no}/year-balances") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/internal/accounts/${account_no}/year-balances") || return 1
     ifn_output "$result"
 }
 
 _analysis_integrity() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn analysis integrity <connection_id>"
-    local conn_id="$1"
+    ifn_require_arg "${1:-}" "company_id" "ifn analysis integrity <company_id>"
+    local company_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/internal/integrity") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/internal/integrity") || return 1
     ifn_output "$result"
 }
 
 _analysis_series() {
-    ifn_require_arg "${1:-}" "connection_id" "ifn analysis series <connection_id>"
-    local conn_id="$1"
+    ifn_require_arg "${1:-}" "company_id" "ifn analysis series <company_id>"
+    local company_id="$1"
 
     local result
-    result=$(ifn_get "/api/companies/${conn_id}/internal/voucherseries-map") || return 1
+    result=$(ifn_get "/api/companies/${company_id}/internal/voucherseries-map") || return 1
     ifn_output "$result"
 }

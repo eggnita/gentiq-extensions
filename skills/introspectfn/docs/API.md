@@ -327,7 +327,7 @@ Both old and new keys remain valid until the new key is first used for a normal 
 | DELETE | `/api/companies/{company_id}` | Yes | owner | Delete a company and all data |
 | POST | `/api/companies/{company_id}/refresh-token` | Yes | owner | Force-refresh ERP OAuth token |
 
-**Company identification:** Most per-company endpoints use `{connection_id}` (UUID), not `{company_id}` (integer).
+**Company identification:** Most per-company endpoints use `{company_id}` (UUID), not `{company_id}` (integer).
 
 **Company response fields:**
 
@@ -335,7 +335,7 @@ Both old and new keys remain valid until the new key is first used for a normal 
 id                    int
 name                  string          "Acme AB"
 org_number            string          "556988-6905"
-connection_id         string (UUID)   ← used as path parameter
+company_id         string (UUID)   ← used as path parameter
 token_health          string          "healthy" | "refresh_token_invalid"
 token_expires_at      string | null   ISO 8601
 scopes                string          Fortnox OAuth scopes
@@ -354,17 +354,17 @@ These proxy requests to the Fortnox API through the backend's rate-limited clien
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `…/{connection_id}/external/{resource}` | Yes | List a resource (paginated) |
-| GET | `…/{connection_id}/external/{resource}/{path}` | Yes | Get a single resource record |
-| GET | `…/{connection_id}/external/{resource}/FY-{fy}/{path}` | Yes | Get a resource record (FY-in-path) |
-| GET | `…/{connection_id}/accounts/{account_number}` | Yes | Get account description |
-| GET | `…/{connection_id}/accounts/FY-{fy}/{account_number}` | Yes | Get account description (FY-in-path) |
-| GET | `…/{connection_id}/external/fileconnections` | Yes | File attachments (`?entity&number&series&financialyear`) |
-| GET | `…/{connection_id}/external/archive/{file_id}` | Yes | Download archive file (binary) |
-| GET | `…/{connection_id}/fileconnection-counts` | Yes | Batch file-attachment counts |
-| GET | `…/{connection_id}/inbox` | Yes | List ERP inbox |
-| GET | `…/{connection_id}/inbox/file/{file_id}` | Yes | Download inbox file (binary) |
-| GET | `…/{connection_id}/inbox/{folder_id}` | Yes | List inbox folder |
+| GET | `…/{company_id}/external/{resource}` | Yes | List a resource (paginated) |
+| GET | `…/{company_id}/external/{resource}/{path}` | Yes | Get a single resource record |
+| GET | `…/{company_id}/external/{resource}/FY-{fy}/{path}` | Yes | Get a resource record (FY-in-path) |
+| GET | `…/{company_id}/accounts/{account_number}` | Yes | Get account description |
+| GET | `…/{company_id}/accounts/FY-{fy}/{account_number}` | Yes | Get account description (FY-in-path) |
+| GET | `…/{company_id}/external/fileconnections` | Yes | File attachments (`?entity&number&series&financialyear`) |
+| GET | `…/{company_id}/external/archive/{file_id}` | Yes | Download archive file (binary) |
+| GET | `…/{company_id}/fileconnection-counts` | Yes | Batch file-attachment counts |
+| GET | `…/{company_id}/inbox` | Yes | List ERP inbox |
+| GET | `…/{company_id}/inbox/file/{file_id}` | Yes | Download inbox file (binary) |
+| GET | `…/{company_id}/inbox/{folder_id}` | Yes | List inbox folder |
 
 **Query params for resource listing:** `page`, `limit`, `filter`, `sortby`, `sortorder`, `financialyear`, `lastmodified`
 
@@ -376,25 +376,25 @@ The sync system downloads ERP data into a local database for fast offline access
 
 | Method | Path | Auth | Min role | Description |
 |--------|------|------|----------|-------------|
-| GET | `…/{connection_id}/sync/financial-years` | Yes | any | List financial years |
-| GET | `…/{connection_id}/sync/status` | Yes | any | Current sync job status |
-| POST | `…/{connection_id}/sync` | Yes | accountant+ | Trigger a sync job |
-| POST | `…/{connection_id}/sync/{job_id}/cancel` | Yes | any | Cancel a running sync |
-| DELETE | `…/{connection_id}/internal` | Yes | developer | Purge all locally synced data |
-| GET | `…/{connection_id}/dashboard` | Yes | any | Dashboard metrics |
-| GET | `…/{connection_id}/internal/account-analysis` | Yes | any | Vouchers grouped by account |
-| GET | `…/{connection_id}/internal/accounts/{number}/year-balances` | Yes | any | Account balance across years |
-| GET | `…/{connection_id}/internal/integrity` | Yes | any | Data integrity check |
-| GET | `…/{connection_id}/internal/voucherseries-map` | Yes | any | Voucher series mapping |
-| GET | `…/{connection_id}/internal/files` | Yes | any | List synced file attachments |
-| GET | `…/{connection_id}/internal/{doc_type}` | Yes | any | List local records |
-| GET | `…/{connection_id}/internal/{doc_type}/{record_id}` | Yes | any | Get a single local record |
-| GET | `…/{connection_id}/internal/{doc_type}/FY-{fy}/{record_id}` | Yes | any | Get a local record (FY-in-path) |
-| POST | `…/{connection_id}/internal/{doc_type}/{record_id}/refresh` | Yes | accountant+ | Re-fetch a record from ERP |
-| POST | `…/{connection_id}/internal/{doc_type}/FY-{fy}/{record_id}/refresh` | Yes | accountant+ | Re-fetch (FY-in-path) |
+| GET | `…/{company_id}/sync/financial-years` | Yes | any | List financial years |
+| GET | `…/{company_id}/sync/status` | Yes | any | Current sync job status |
+| POST | `…/{company_id}/sync` | Yes | accountant+ | Trigger a sync job |
+| POST | `…/{company_id}/sync/{job_id}/cancel` | Yes | any | Cancel a running sync |
+| DELETE | `…/{company_id}/internal` | Yes | developer | Purge all locally synced data |
+| GET | `…/{company_id}/dashboard` | Yes | any | Dashboard metrics |
+| GET | `…/{company_id}/internal/account-analysis` | Yes | any | Vouchers grouped by account |
+| GET | `…/{company_id}/internal/accounts/{number}/year-balances` | Yes | any | Account balance across years |
+| GET | `…/{company_id}/internal/integrity` | Yes | any | Data integrity check |
+| GET | `…/{company_id}/internal/voucherseries-map` | Yes | any | Voucher series mapping |
+| GET | `…/{company_id}/internal/files` | Yes | any | List synced file attachments |
+| GET | `…/{company_id}/internal/{doc_type}` | Yes | any | List local records |
+| GET | `…/{company_id}/internal/{doc_type}/{record_id}` | Yes | any | Get a single local record |
+| GET | `…/{company_id}/internal/{doc_type}/FY-{fy}/{record_id}` | Yes | any | Get a local record (FY-in-path) |
+| POST | `…/{company_id}/internal/{doc_type}/{record_id}/refresh` | Yes | accountant+ | Re-fetch a record from ERP |
+| POST | `…/{company_id}/internal/{doc_type}/FY-{fy}/{record_id}/refresh` | Yes | accountant+ | Re-fetch (FY-in-path) |
 | GET | `/api/sync/overview` | Yes | any | Global sync status across companies |
 
-**Sync request body** (`POST …/{connection_id}/sync`):
+**Sync request body** (`POST …/{company_id}/sync`):
 
 ```json
 {
@@ -410,7 +410,7 @@ The sync system downloads ERP data into a local database for fast offline access
 
 **Synced doc types:** `vouchers`, `invoices`, `supplierinvoices`, `customers`, `suppliers`, `accounts`, `financialyears`, `voucherseries`
 
-**Synced file attachments** (`GET …/{connection_id}/internal/files`):
+**Synced file attachments** (`GET …/{company_id}/internal/files`):
 
 Lists file references from `erp_file_refs` with pagination.
 
@@ -427,13 +427,13 @@ The staging system is the core feature for CLI/bot integration. It implements a 
 
 | Method | Path | Auth | Min role | Description |
 |--------|------|------|----------|-------------|
-| GET | `…/{connection_id}/bk-staging` | Yes | any | List staged actions for a company |
-| POST | `…/{connection_id}/bk-staging` | Yes | assistant+ | Propose a staging action |
-| GET | `…/{connection_id}/bk-staging/next-number` | Yes | any | Predicted next voucher number |
-| POST | `…/{connection_id}/bk-staging/upload-file` | Yes | assistant+ | Upload file (multipart) |
-| GET | `…/{connection_id}/write-windows` | Yes | any | List write windows |
-| POST | `…/{connection_id}/write-windows` | Yes | owner | Create a write window |
-| DELETE | `…/{connection_id}/write-windows/{window_id}` | Yes | any | Delete a write window |
+| GET | `…/{company_id}/bk-staging` | Yes | any | List staged actions for a company |
+| POST | `…/{company_id}/bk-staging` | Yes | assistant+ | Propose a staging action |
+| GET | `…/{company_id}/bk-staging/next-number` | Yes | any | Predicted next voucher number |
+| POST | `…/{company_id}/bk-staging/upload-file` | Yes | assistant+ | Upload file (multipart) |
+| GET | `…/{company_id}/write-windows` | Yes | any | List write windows |
+| POST | `…/{company_id}/write-windows` | Yes | owner | Create a write window |
+| DELETE | `…/{company_id}/write-windows/{window_id}` | Yes | any | Delete a write window |
 | GET | `/api/bk-staging` | Yes | any | List all staged actions across companies |
 | GET | `/api/bk-staging/{action_id}` | Yes | any | Get a staged action |
 | PATCH | `/api/bk-staging/{action_id}` | Yes | accountant+ or own | Edit action (payload, notes, reasoning) |
@@ -533,7 +533,7 @@ If `action_ids` is omitted, all approved non-held actions are executed.
 **Write windows:** Define open date ranges. Voucher actions with `target_date` outside all windows are rejected at execution.
 
 ```json
-POST /api/companies/{connection_id}/write-windows
+POST /api/companies/{company_id}/write-windows
 { "from_date": "2025-01-01", "to_date": "2025-12-31", "label": "FY 2025" }
 ```
 
@@ -672,7 +672,7 @@ Rate limiting is server-side. Clients do not need their own throttling.
 | `HealthResponse` | `ok` (bool) |
 | `OkResponse` | `ok` (str) |
 | `RefreshTokenResponse` | `ok` (bool), `error` (str\|null), `code` (enum\|null) |
-| `CompanyWithBadge` | `id`, `name`, `org_number`, `connection_id`, `token_health`, `token_expires_at`, `scopes`, `created_at`, `updated_at`, `linked_production_id`, `badge` (TokenBadge) |
+| `CompanyWithBadge` | `id`, `name`, `org_number`, `company_id`, `token_health`, `token_expires_at`, `scopes`, `created_at`, `updated_at`, `linked_production_id`, `badge` (TokenBadge) |
 | `TokenBadge` | `label` (str), `cls` (str), `needs_reauth` (bool), `can_refresh` (bool) |
 | `NextNumberResponse` | `predicted_number` (str), `sequence` (int) |
 | `FileUploadResponse` | `file_id` (str), `filename` (str) |
