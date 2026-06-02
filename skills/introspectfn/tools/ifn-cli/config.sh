@@ -47,3 +47,31 @@ ifn_load_config() {
 
     export IFN_BASE_URL IFN_WEB_URL IFN_API_KEY IFN_INSECURE IFN_VERBOSE IFN_USER_AGENT IFN_VERSION
 }
+
+# Write credentials to config file (atomic)
+# Usage: ifn_write_config <base_url> <api_key>
+ifn_write_config() {
+    local base_url="$1"
+    local api_key="$2"
+    local config_dir
+    config_dir="$(dirname "$IFN_CONFIG")"
+
+    mkdir -p "$config_dir"
+    chmod 700 "$config_dir"
+
+    local tmp
+    tmp=$(mktemp "${config_dir}/config.XXXXXX")
+
+    {
+        echo "# IntrospectFN CLI config (written by ifn auth login)"
+        echo "IFN_BASE_URL=${base_url}"
+        echo "IFN_API_KEY=${api_key}"
+        echo "IFN_INSECURE=${IFN_INSECURE:-true}"
+        if [ -n "${IFN_WEB_URL:-}" ] && [ "${IFN_WEB_URL:-}" != "$base_url" ]; then
+            echo "IFN_WEB_URL=${IFN_WEB_URL}"
+        fi
+    } > "$tmp"
+
+    chmod 600 "$tmp"
+    mv "$tmp" "$IFN_CONFIG"
+}

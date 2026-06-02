@@ -27,9 +27,6 @@ source "${IFN_CLI_DIR}/lib/auth.sh"
 # shellcheck source=ifn-cli/lib/deeplink.sh
 source "${IFN_CLI_DIR}/lib/deeplink.sh"
 
-# Load config
-ifn_load_config
-
 # --- Subcommand dispatch ---
 
 ifn_usage() {
@@ -48,7 +45,7 @@ Commands:
   analysis   accounts|balances|integrity|series  Financial analysis
   sync       status|overview|years|trigger|cancel  Sync management
   staging    list|list-all|get|propose|write-windows  Staging workflow
-  auth       status|rotate                      API key status and rotation
+  auth       login|status|rotate               Authentication and key management
   link       <type> <company_id> [args]         Generate web app deep links
   bk         find|parse|propose|mapping|...  Bookkeeping operations (settlements, adjustments)
   version                         Show CLI version
@@ -65,12 +62,10 @@ Environment:
   IFN_INSECURE   Skip SSL cert validation (default: true)
   IFN_WEB_URL    Web app URL for deep links (default: IFN_BASE_URL)
 
-Examples:
-  ifn health
-  ifn companies list
-  ifn dashboard abc-123-uuid
-  ifn analysis accounts abc-123-uuid
-  ifn staging propose abc-123-uuid proposal.json
+Getting started:
+  ifn auth login                   # Authenticate (first time setup)
+  ifn health                       # Verify connectivity
+  ifn companies list               # List connected companies
 USAGE
 }
 
@@ -109,6 +104,24 @@ fi
 
 COMMAND="$1"
 shift
+
+# Load config — soft mode for commands that can work without it
+case "$COMMAND" in
+    version|--version)
+        ifn_version
+        exit 0
+        ;;
+    auth)
+        if [ "${1:-}" = "login" ] || [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+            ifn_load_config 2>/dev/null || true
+        else
+            ifn_load_config
+        fi
+        ;;
+    *)
+        ifn_load_config
+        ;;
+esac
 
 # Source and dispatch command
 case "$COMMAND" in
@@ -167,9 +180,6 @@ case "$COMMAND" in
     bk)
         source "${IFN_CLI_DIR}/commands/bk.sh"
         cmd_bk "$@"
-        ;;
-    version|--version)
-        ifn_version
         ;;
     *)
         echo "Error: unknown command '$COMMAND'" >&2

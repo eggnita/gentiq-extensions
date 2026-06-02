@@ -282,12 +282,17 @@ ifn xcompanies files-groups                 # Cross-company group directory
 
 ### `ifn auth`
 
-API key management.
+Authentication and API key management.
 
 ```bash
-ifn auth status     # Current API key and session info (email, role, is_bot)
-ifn auth rotate     # Self-rotate API key (grace period until new key is first used)
+ifn auth login                         # Authenticate via browser (OAuth flow)
+ifn auth login --token                 # Paste an existing API key
+ifn auth login --email me@co.com       # Pre-fill email for OAuth
+ifn auth status                        # Current API key and session info (email, role, is_bot)
+ifn auth rotate                        # Self-rotate API key (grace period until new key is first used)
 ```
+
+`login` stores credentials in `~/.ifn/config`. `rotate` updates the config file automatically if it exists.
 
 ---
 
@@ -449,18 +454,56 @@ To run the `ifn` CLI locally (outside of a deployed Gent), follow these steps.
 
 > `python3`, `pdftotext`, and `openpyxl` are only needed for settlement parsing (`ifn bk parse/propose`). All other commands work with just `bash`, `curl`, and `jq`.
 
-### 1. Get an API key
+### 1. Add `ifn` to your PATH
 
-Obtain an API key from the IntrospectFN web UI. Navigate to **Settings > API Keys** and create a key with the appropriate role (typically `assistant` for read + propose access, or `developer` for full access including jobs).
+```bash
+# Option A: symlink into ~/bin
+mkdir -p ~/bin
+ln -sf "$(pwd)/skills/introspectfn/tools/ifn" ~/bin/ifn
 
-### 2. Set environment variables
+# Option B: symlink into /usr/local/bin
+sudo ln -sf "$(pwd)/skills/introspectfn/tools/ifn" /usr/local/bin/ifn
+```
+
+### 2. Authenticate
+
+**Option A: Browser login (OAuth)**
+
+```bash
+ifn auth login
+```
+
+This will:
+1. Prompt for the IntrospectFN server URL (if not already configured)
+2. Prompt for your email
+3. Open your browser for authorization
+4. Exchange the auth code for an API key
+5. Store everything in `~/.ifn/config`
+
+You can pre-fill values:
+
+```bash
+ifn auth login --email me@company.com --name "My Name"
+```
+
+**Option B: Paste an existing API key**
+
+If you already have an API key (from the IntrospectFN web UI or another source):
+
+```bash
+ifn auth login --token
+```
+
+This prompts for the server URL and API key, verifies the key, and saves to config.
+
+**Option C: Manual environment variables**
 
 ```bash
 export IFN_API_KEY="your-api-key-here"
 export IFN_BASE_URL="https://your-instance.example.com"
 ```
 
-Or write them to the config file:
+Or write them directly to the config file:
 
 ```bash
 mkdir -p ~/.ifn
@@ -474,18 +517,7 @@ chmod 600 ~/.ifn/config
 
 Environment variables take precedence over the config file.
 
-### 3. Add `ifn` to your PATH
-
-```bash
-# Option A: symlink into ~/bin
-mkdir -p ~/bin
-ln -sf "$(pwd)/skills/introspectfn/tools/ifn" ~/bin/ifn
-
-# Option B: symlink into /usr/local/bin
-sudo ln -sf "$(pwd)/skills/introspectfn/tools/ifn" /usr/local/bin/ifn
-```
-
-### 4. Verify connectivity
+### 3. Verify connectivity
 
 ```bash
 ifn health           # Check API is reachable
