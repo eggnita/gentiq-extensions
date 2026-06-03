@@ -97,7 +97,7 @@ ifn browse <company_id> inbox-file <file_id>             # Download an inbox fil
 
 ### `ifn records`
 
-Browse **locally synced** ERP records (faster, works offline).
+Browse **locally synced** ERP records. These are cached copies of Fortnox data — faster than `ifn browse` but may be stale.
 
 ```bash
 ifn records <company_id> <doc_type> [record_id] [options]
@@ -113,17 +113,73 @@ ifn records <company_id> <doc_type> [record_id] [options]
 | `--limit <n>` | Records per page |
 | `--fy <id>` | Financial year ID |
 | `--include-staged` | Include staged actions (vouchers only) |
-| `--refresh` | Re-fetch a specific record from ERP |
+| `--refresh` | Re-fetch a specific record from Fortnox |
+| `--ensure-fresh` | Auto-refresh from Fortnox before returning data |
 | `--email <email>` | Filter by email |
 | `--phone <phone>` | Filter by phone |
 | `--referencenumber <ref>` | Filter by reference number |
 
-**Files subcommand:**
+**Subcommands:**
+
+#### Voucher Refresh — keeping local data in sync with Fortnox
+
+IntrospectFN keeps a local copy of Fortnox data for fast access. However, this local copy can become stale — for example, when a receipt is attached to a voucher directly in Fortnox, or when a recent sync didn't pick up all file attachments. The refresh mechanism lets you re-pull a specific voucher (including all its file attachments) from Fortnox on demand, without triggering a full company-wide sync.
+
+There are two ways to refresh:
+
+#### 1. `ifn records <company_id> refresh <voucher_ref> --fy <id>`
+
+**Fire-and-forget refresh.** Tells the server to re-sync a single voucher and its attachments from Fortnox. Returns the refresh operation result but **not** the voucher data itself. Use this when you just want to trigger the re-sync — for example, before running a batch analysis or when preparing data for someone else.
 
 ```bash
-ifn records <company_id> files [options]    # List synced file attachments
-    --doc-type <type>                       # Filter by document type
-    --search <query>                        # Search text
+# Refresh voucher A59 in financial year 6
+ifn records abc-123 refresh A59 --fy 6
+
+# voucher_ref = series + number (A59 = series A, voucher 59)
+ifn records abc-123 refresh B12 --fy 3
+```
+
+**When to use:**
+- Attachments are missing or incomplete in the local sync
+- A receipt or document was recently added in Fortnox but hasn't synced yet
+- The integrity check (`ifn analysis integrity`) flags missing documentation
+- You want to refresh the data now but will read it later
+
+**API endpoint:** `POST /api/companies/{id}/internal/vouchers/{ref}/refresh?financial_year_id={fy}`
+
+#### 2. `--ensure-fresh` flag (refresh + fetch in one step)
+
+**Refresh then return the data.** This flag first triggers the same refresh as above, waits for it to complete, and then fetches and returns the updated voucher record — all in a single CLI call. If the refresh fails (e.g., network issue), it falls back to the cached data and prints a warning.
+
+```bash
+# Get voucher A59 with guaranteed fresh data (refresh + fetch combined)
+ifn records abc-123 vouchers A59 --fy 6 --ensure-fresh
+
+# Without --ensure-fresh, you'd need two calls:
+ifn records abc-123 refresh A59 --fy 6       # step 1: refresh
+ifn records abc-123 vouchers A59 --fy 6      # step 2: fetch
+```
+
+**When to use:**
+- You need to read voucher data and want to make sure it's up to date
+- You're investigating a specific voucher and want to see the latest attachments
+- This is the recommended approach for most day-to-day use
+
+#### Summary
+
+| Command | Refreshes from Fortnox | Returns voucher data |
+|---------|:---:|:---:|
+| `records <cid> refresh A59 --fy 6` | Yes | No (only refresh result) |
+| `records <cid> vouchers A59 --fy 6 --ensure-fresh` | Yes | Yes (full voucher record) |
+| `records <cid> vouchers A59 --fy 6` | No | Yes (cached, may be stale) |
+
+#### `ifn records <company_id> files [options]`
+
+List synced file attachments.
+
+```bash
+ifn records <company_id> files --doc-type invoices    # Filter by document type
+ifn records <company_id> files --search "receipt"     # Search by filename
 ```
 
 ---

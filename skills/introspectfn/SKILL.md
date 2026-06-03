@@ -47,6 +47,8 @@ ifn <command> [subcommand] [options]
 | `ifn browse <company_id> inbox-file <file_id>` | Download an inbox file |
 | `ifn records <company_id> <doc_type>` | Browse locally synced records |
 | `ifn records <company_id> <doc_type> <id>` | Get a specific synced record |
+| `ifn records <company_id> <doc_type> <id> --fy <id> --ensure-fresh` | Fetch record after auto-refreshing from Fortnox |
+| `ifn records <company_id> refresh <voucher_ref> --fy <id>` | Refresh voucher data + attachments from Fortnox |
 | `ifn records <company_id> files` | List synced file attachments |
 | `ifn analysis accounts <company_id>` | Vouchers grouped by account |
 | `ifn analysis balances <company_id> <account>` | Account balance across years |
@@ -288,6 +290,37 @@ ifn records <company_id> files --doc-type invoices
 
 # Search by filename
 ifn records <company_id> files --search "receipt"
+```
+
+### Refreshing Voucher Data from Fortnox
+
+When voucher data is outdated or file attachments are missing from the local sync, refresh the voucher directly from Fortnox:
+
+```bash
+# Refresh a specific voucher (re-syncs record + all file attachments)
+ifn records <company_id> refresh A59 --fy 6
+
+# Or auto-refresh before fetching (combines refresh + fetch)
+ifn records <company_id> vouchers A59 --fy 6 --ensure-fresh
+```
+
+**When to refresh:**
+- A voucher's file attachment count seems lower than expected (e.g., `file-counts` shows files but `fileconnections` returns empty)
+- You need to verify source documents but the local copies are stale or missing
+- A recent ERP change (e.g., a newly attached receipt) hasn't been synced yet
+- The `ifn analysis integrity` report flags missing documentation for a voucher
+
+**Auto-refresh pattern:** When working with a voucher that should have attachments, use `--ensure-fresh` to guarantee you're looking at the latest data:
+
+```bash
+# 1. Check if files should exist
+ifn browse <company_id> file-counts --entity vouchers --fy 6
+
+# 2. If a voucher has files but they're missing locally, refresh it
+ifn records <company_id> refresh A59 --fy 6
+
+# 3. Now fetch the fresh data
+ifn records <company_id> vouchers A59 --fy 6
 ```
 
 ### Downloading a File
