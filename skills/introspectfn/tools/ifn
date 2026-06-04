@@ -70,7 +70,7 @@ USAGE
 }
 
 ifn_version() {
-    echo "ifn 0.2.6 (IntrospectFN CLI)"
+    echo "ifn 0.7.0 (IntrospectFN CLI)"
 }
 
 # Parse global flags
