@@ -4,7 +4,7 @@ Virtual bookkeeper skill for the Gentiq platform. Connects to the [IntrospectFN]
 
 ## CLI Tool: `ifn`
 
-All operations use the `ifn` CLI (v0.7.0). Installed at `~/bin/ifn`.
+All operations use the `ifn` CLI (v0.7.1). Installed at `~/bin/ifn`.
 
 ```
 ifn <command> [subcommand] [options]
