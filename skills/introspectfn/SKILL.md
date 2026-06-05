@@ -48,7 +48,7 @@ ifn <command> [subcommand] [options]
 | `ifn records <company_id> <doc_type>` | Browse locally synced records |
 | `ifn records <company_id> <doc_type> <id>` | Get a specific synced record |
 | `ifn records <company_id> <doc_type> <id> --fy <id> --ensure-fresh` | Fetch record after auto-refreshing from Fortnox |
-| `ifn records <company_id> refresh <voucher_ref> --fy <id>` | Refresh voucher data + attachments from Fortnox |
+| `ifn records <company_id> <doc_type> <id> --refresh --fy <id>` | Refresh record + attachments from Fortnox |
 | `ifn records <company_id> files` | List synced file attachments |
 | `ifn analysis accounts <company_id>` | Vouchers grouped by account |
 | `ifn analysis balances <company_id> <account>` | Account balance across years |
@@ -298,7 +298,7 @@ When voucher data is outdated or file attachments are missing from the local syn
 
 ```bash
 # Refresh a specific voucher (re-syncs record + all file attachments)
-ifn records <company_id> refresh A59 --fy 6
+ifn records <company_id> vouchers A59 --refresh --fy 6
 
 # Or auto-refresh before fetching (combines refresh + fetch)
 ifn records <company_id> vouchers A59 --fy 6 --ensure-fresh
@@ -317,7 +317,7 @@ ifn records <company_id> vouchers A59 --fy 6 --ensure-fresh
 ifn browse <company_id> file-counts --entity vouchers --fy 6
 
 # 2. If a voucher has files but they're missing locally, refresh it
-ifn records <company_id> refresh A59 --fy 6
+ifn records <company_id> vouchers A59 --refresh --fy 6
 
 # 3. Now fetch the fresh data
 ifn records <company_id> vouchers A59 --fy 6

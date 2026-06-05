@@ -127,16 +127,16 @@ IntrospectFN keeps a local copy of Fortnox data for fast access. However, this l
 
 There are two ways to refresh:
 
-#### 1. `ifn records <company_id> refresh <voucher_ref> --fy <id>`
+#### 1. `ifn records <company_id> <doc_type> <record_id> --refresh --fy <id>`
 
-**Fire-and-forget refresh.** Tells the server to re-sync a single voucher and its attachments from Fortnox. Returns the refresh operation result but **not** the voucher data itself. Use this when you just want to trigger the re-sync — for example, before running a batch analysis or when preparing data for someone else.
+**Fire-and-forget refresh.** Tells the server to re-sync a single record and its attachments from Fortnox. Returns the refresh operation result but **not** the record data itself. Works with any synced doc type (vouchers, invoices, supplierinvoices, etc.).
 
 ```bash
 # Refresh voucher A59 in financial year 6
-ifn records abc-123 refresh A59 --fy 6
+ifn records abc-123 vouchers A59 --refresh --fy 6
 
-# voucher_ref = series + number (A59 = series A, voucher 59)
-ifn records abc-123 refresh B12 --fy 3
+# Works with any doc type
+ifn records abc-123 supplierinvoices 1042 --refresh --fy 6
 ```
 
 **When to use:**
@@ -145,32 +145,32 @@ ifn records abc-123 refresh B12 --fy 3
 - The integrity check (`ifn analysis integrity`) flags missing documentation
 - You want to refresh the data now but will read it later
 
-**API endpoint:** `POST /api/companies/{id}/internal/vouchers/{ref}/refresh?financial_year_id={fy}`
+**API endpoint:** `POST /api/companies/{id}/internal/{doc_type}/FY-{fy}/{record_id}/refresh`
 
 #### 2. `--ensure-fresh` flag (refresh + fetch in one step)
 
-**Refresh then return the data.** This flag first triggers the same refresh as above, waits for it to complete, and then fetches and returns the updated voucher record — all in a single CLI call. If the refresh fails (e.g., network issue), it falls back to the cached data and prints a warning.
+**Refresh then return the data.** This flag first triggers the same refresh as above, waits for it to complete, and then fetches and returns the updated record — all in a single CLI call. If the refresh fails (e.g., network issue), it falls back to the cached data and prints a warning.
 
 ```bash
 # Get voucher A59 with guaranteed fresh data (refresh + fetch combined)
 ifn records abc-123 vouchers A59 --fy 6 --ensure-fresh
 
 # Without --ensure-fresh, you'd need two calls:
-ifn records abc-123 refresh A59 --fy 6       # step 1: refresh
-ifn records abc-123 vouchers A59 --fy 6      # step 2: fetch
+ifn records abc-123 vouchers A59 --refresh --fy 6    # step 1: refresh
+ifn records abc-123 vouchers A59 --fy 6              # step 2: fetch
 ```
 
 **When to use:**
-- You need to read voucher data and want to make sure it's up to date
+- You need to read record data and want to make sure it's up to date
 - You're investigating a specific voucher and want to see the latest attachments
 - This is the recommended approach for most day-to-day use
 
 #### Summary
 
-| Command | Refreshes from Fortnox | Returns voucher data |
+| Command | Refreshes from Fortnox | Returns record data |
 |---------|:---:|:---:|
-| `records <cid> refresh A59 --fy 6` | Yes | No (only refresh result) |
-| `records <cid> vouchers A59 --fy 6 --ensure-fresh` | Yes | Yes (full voucher record) |
+| `records <cid> vouchers A59 --refresh --fy 6` | Yes | No (only refresh result) |
+| `records <cid> vouchers A59 --fy 6 --ensure-fresh` | Yes | Yes (full record) |
 | `records <cid> vouchers A59 --fy 6` | No | Yes (cached, may be stale) |
 
 #### `ifn records <company_id> files [options]`

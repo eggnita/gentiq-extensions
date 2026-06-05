@@ -12,15 +12,14 @@ cmd_records() {
         echo ""
         echo "Special subcommands:"
         echo "  files   [--doc-type <type>] [--search <q>]  List synced file attachments"
-        echo "  refresh <voucher_ref> --fy <id>             Refresh voucher data from Fortnox"
         echo ""
         echo "Options:"
         echo "  --page <n>           Page number"
         echo "  --limit <n>          Records per page"
         echo "  --fy <id>            Financial year ID"
         echo "  --include-staged     Include staged actions (vouchers only)"
-        echo "  --refresh            Re-fetch a specific record from ERP"
-        echo "  --ensure-fresh       Auto-refresh before fetching (vouchers, requires --fy)"
+        echo "  --refresh            Re-fetch a specific record from ERP (requires --fy)"
+        echo "  --ensure-fresh       Auto-refresh before fetching (requires --fy)"
         return
     fi
 
@@ -35,10 +34,6 @@ cmd_records() {
     case "$doc_type" in
         files)
             _records_files "$company_id" "$@"
-            return
-            ;;
-        refresh)
-            _records_refresh "$company_id" "$@"
             return
             ;;
     esac
@@ -72,10 +67,9 @@ cmd_records() {
 
     # Handle explicit --refresh flag
     if [ "$refresh" = "true" ] && [ -n "$record_id" ]; then
-        local refresh_path="${path}/${record_id}/refresh"
-        local refresh_qs=""
-        [ -n "$fy" ] && refresh_qs="financial_year_id=${fy}"
-        [ -n "$refresh_qs" ] && refresh_path="${refresh_path}?${refresh_qs}"
+        local refresh_path="${path}"
+        [ -n "$fy" ] && refresh_path="${refresh_path}/FY-${fy}"
+        refresh_path="${refresh_path}/${record_id}/refresh"
 
         local result
         result=$(ifn_post "$refresh_path") || return 1
@@ -85,10 +79,9 @@ cmd_records() {
 
     # Handle --ensure-fresh: auto-refresh before fetching (vouchers only)
     if [ "$ensure_fresh" = "true" ] && [ -n "$record_id" ]; then
-        local refresh_path="${path}/${record_id}/refresh"
-        local refresh_qs=""
-        [ -n "$fy" ] && refresh_qs="financial_year_id=${fy}"
-        [ -n "$refresh_qs" ] && refresh_path="${refresh_path}?${refresh_qs}"
+        local refresh_path="${path}"
+        [ -n "$fy" ] && refresh_path="${refresh_path}/FY-${fy}"
+        refresh_path="${refresh_path}/${record_id}/refresh"
 
         if [ "$IFN_VERBOSE" = "true" ]; then
             echo "[records] auto-refreshing ${doc_type}/${record_id} from Fortnox..." >&2
@@ -120,64 +113,6 @@ cmd_records() {
 
     local result
     result=$(ifn_get "$path") || return 1
-    ifn_output "$result"
-}
-
-# Refresh a voucher's data from Fortnox (re-syncs record and file attachments)
-_records_refresh() {
-    local company_id="$1"
-    shift
-
-    if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-        cat <<'EOF'
-Usage: ifn records <company_id> refresh <voucher_ref> [options]
-
-Refresh a voucher's data from Fortnox. Re-syncs the record and all
-file attachments. Use when local data is outdated or attachments
-are missing.
-
-Arguments:
-  voucher_ref   Voucher reference, e.g. A59 (series + number)
-
-Options:
-  --fy <id>     Financial year ID (recommended)
-
-Examples:
-  ifn records abc-123 refresh A59 --fy 6
-  ifn records abc-123 refresh B12 --fy 3
-EOF
-        return
-    fi
-
-    # Get voucher ref
-    local voucher_ref=""
-    if [ $# -gt 0 ] && [[ "$1" != --* ]]; then
-        voucher_ref="$1"
-        shift
-    fi
-
-    if [ -z "$voucher_ref" ]; then
-        ifn_error "voucher_ref is required. Usage: ifn records <company_id> refresh <voucher_ref> --fy <id>"
-        return 1
-    fi
-
-    local fy=""
-    while [ $# -gt 0 ]; do
-        case "$1" in
-            --fy)  fy="$2"; shift 2 ;;
-            *)     shift ;;
-        esac
-    done
-
-    local path="/api/companies/${company_id}/internal/vouchers/${voucher_ref}/refresh"
-    [ -n "$fy" ] && path="${path}?financial_year_id=${fy}"
-
-    if [ "$IFN_VERBOSE" = "true" ]; then
-        echo "[records] refreshing voucher ${voucher_ref} from Fortnox..." >&2
-    fi
-
-    local result
-    result=$(ifn_post "$path") || return 1
     ifn_output "$result"
 }
 

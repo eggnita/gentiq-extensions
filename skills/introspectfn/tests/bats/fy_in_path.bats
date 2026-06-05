@@ -69,6 +69,18 @@ teardown() { mock_teardown; }
     assert_http_call "POST" "/api/companies/abc-123/internal/vouchers/42/refresh"
 }
 
+@test "records refresh with --fy uses FY-in-path" {
+    load_command records
+    cmd_records abc-123 vouchers A59 --refresh --fy 6
+    assert_http_call "POST" "/api/companies/abc-123/internal/vouchers/FY-6/A59/refresh"
+}
+
+@test "records refresh works with any doc_type" {
+    load_command records
+    cmd_records abc-123 supplierinvoices 1042 --refresh --fy 3
+    assert_http_call "POST" "/api/companies/abc-123/internal/supplierinvoices/FY-3/1042/refresh"
+}
+
 # ============================================================
 # browse: auto-detect FY in record_id
 # ============================================================
