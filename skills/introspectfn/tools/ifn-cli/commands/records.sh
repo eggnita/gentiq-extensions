@@ -106,6 +106,10 @@ cmd_records() {
     [ -n "$email" ] && qs="${qs}&email=${email}"
     [ -n "$phone" ] && qs="${qs}&phone=${phone}"
     [ -n "$referencenumber" ] && qs="${qs}&referencenumber=${referencenumber}"
+    # FY on LIST queries — when there's no record_id the FY-in-path branch
+    # above doesn't fire, so pass it as a query param instead. Matches the
+    # convention `files.sh` uses on the same /internal/... family.
+    [ -z "$record_id" ] && [ -n "$fy" ] && qs="${qs}&financial_year_id=${fy}"
 
     if [ -n "$qs" ]; then
         path="${path}?${qs:1}"
