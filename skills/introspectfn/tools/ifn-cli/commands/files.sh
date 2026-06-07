@@ -218,7 +218,12 @@ _files_metadata() {
         esac
     done
 
-    # Build JSON body
+    # Build JSON body. category and group_id are plain strings (wrap in
+    # quotes). `details` is passed in as raw JSON — wrapping it in quotes
+    # would make the body invalid as soon as the JSON contains its own
+    # quotes (which it always does for an object), and would store the
+    # value as a string-of-JSON in IFN rather than as a structured JSON
+    # object. Inline it raw.
     local body='{'
     local first="true"
     if [ -n "$category" ]; then
@@ -232,7 +237,7 @@ _files_metadata() {
     fi
     if [ -n "$details" ]; then
         [ "$first" = "false" ] && body="${body},"
-        body="${body}\"details\":\"${details}\""
+        body="${body}\"details\":${details}"
     fi
     body="${body}}"
 
