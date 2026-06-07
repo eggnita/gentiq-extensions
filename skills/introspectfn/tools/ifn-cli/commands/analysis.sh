@@ -27,25 +27,30 @@ cmd_analysis() {
 }
 
 _analysis_accounts() {
-    ifn_require_arg "${1:-}" "company_id" "ifn analysis accounts <company_id>"
+    ifn_require_arg "${1:-}" "company_id" "ifn analysis accounts <company_id> --account <n>"
     local company_id="$1"
     shift
 
-    local fy="" include_staged="false"
+    local fy="" include_staged="false" account=""
     while [ $# -gt 0 ]; do
         case "$1" in
             --fy)              fy="$2"; shift 2 ;;
             --include-staged)  include_staged="true"; shift ;;
+            --account)         account="$2"; shift 2 ;;
             *)                 shift ;;
         esac
     done
 
-    local qs=""
+    if [ -z "$account" ]; then
+        ifn_error "missing required option: --account <number> (e.g. --account 1584)"
+        return 1
+    fi
+
+    local qs="account=${account}"
     [ -n "$fy" ] && qs="${qs}&financial_year_id=${fy}"
     [ "$include_staged" = "true" ] && qs="${qs}&include_staged=true"
 
-    local path="/api/companies/${company_id}/internal/account-analysis"
-    [ -n "$qs" ] && path="${path}?${qs:1}"
+    local path="/api/companies/${company_id}/internal/account-analysis?${qs}"
 
     local result
     result=$(ifn_get "$path") || return 1
