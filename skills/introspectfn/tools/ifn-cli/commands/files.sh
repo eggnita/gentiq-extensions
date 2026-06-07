@@ -44,7 +44,10 @@ cmd_files() {
             echo "Metadata options:"
             echo "  --category <cat>           Set file category"
             echo "  --group-id <id>            Set metadata group"
-            echo "  --details <text>           Set details/description"
+            echo "  --details <json>           Set details (raw JSON)"
+            echo "  --clear-category           Clear category (sets to null)"
+            echo "  --clear-group-id           Clear group_id (sets to null)"
+            echo "  --clear-details            Clear details (sets to null)"
             ;;
         *)
             ifn_error "unknown files subcommand: $subcmd"
@@ -209,12 +212,16 @@ _files_metadata() {
     shift 2
 
     local category="" group_id="" details=""
+    local clear_category="false" clear_group_id="false" clear_details="false"
     while [ $# -gt 0 ]; do
         case "$1" in
-            --category) category="$2"; shift 2 ;;
-            --group-id) group_id="$2"; shift 2 ;;
-            --details)  details="$2"; shift 2 ;;
-            *)          shift ;;
+            --category)        category="$2"; shift 2 ;;
+            --group-id)        group_id="$2"; shift 2 ;;
+            --details)         details="$2"; shift 2 ;;
+            --clear-category)  clear_category="true"; shift ;;
+            --clear-group-id)  clear_group_id="true"; shift ;;
+            --clear-details)   clear_details="true"; shift ;;
+            *)                 shift ;;
         esac
     done
 
@@ -224,18 +231,31 @@ _files_metadata() {
     # quotes (which it always does for an object), and would store the
     # value as a string-of-JSON in IFN rather than as a structured JSON
     # object. Inline it raw.
+    #
+    # `--clear-X` flags emit explicit nulls so the API clears that field;
+    # without them, absent fields stay untouched (the historical default).
     local body='{'
     local first="true"
-    if [ -n "$category" ]; then
+    if [ "$clear_category" = "true" ]; then
+        body="${body}\"category\":null"
+        first="false"
+    elif [ -n "$category" ]; then
         body="${body}\"category\":\"${category}\""
         first="false"
     fi
-    if [ -n "$group_id" ]; then
+    if [ "$clear_group_id" = "true" ]; then
+        [ "$first" = "false" ] && body="${body},"
+        body="${body}\"group_id\":null"
+        first="false"
+    elif [ -n "$group_id" ]; then
         [ "$first" = "false" ] && body="${body},"
         body="${body}\"group_id\":\"${group_id}\""
         first="false"
     fi
-    if [ -n "$details" ]; then
+    if [ "$clear_details" = "true" ]; then
+        [ "$first" = "false" ] && body="${body},"
+        body="${body}\"details\":null"
+    elif [ -n "$details" ]; then
         [ "$first" = "false" ] && body="${body},"
         body="${body}\"details\":${details}"
     fi
