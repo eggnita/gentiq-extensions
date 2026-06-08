@@ -532,7 +532,7 @@
                     "external-erp"
                 ],
                 "summary": "List file connections (live ERP)",
-                "description": "Discover files (PDFs, images, etc.) attached to a voucher, invoice, or supplier invoice\nby querying the live ERP API.\n\n**This is the first step in a two-step file download workflow:**\n\n1. **Discover files** \u2014 call this endpoint with the entity type and document identifiers\n2. **Download a file** \u2014 use a `file_id` from the response to call\n   `GET /api/companies/{company_id}/external/archive/{file_id}`\n\n### Parameters\n\n- `entity` \u2014 the document type: `voucher`, `invoice`, or `supplierinvoice`\n- `number` \u2014 the document number (e.g. `232` for voucher A-232)\n- `series` \u2014 voucher series letter (e.g. `A`). Required for vouchers, ignored for invoices/SIs.\n- `financialyear` \u2014 the financial year ID (e.g. `7`). Required for vouchers to filter by year.\n\n### Example: Find files attached to voucher A-232 in FY 7\n\n```\nGET /api/companies/{id}/external/fileconnections?entity=voucher&number=232&series=A&financialyear=7\n```\n\nResponse:\n```json\n{\n  \"files\": [\n    {\"file_id\": \"18b596aa-...\", \"name\": \"receipt.pdf\", \"source\": null},\n    {\"file_id\": \"a3c4d5e6-...\", \"name\": \"scan.jpg\", \"source\": \"Supplier Invoice #45\"}\n  ]\n}\n```\n\nFiles with a `source` field are **indirect attachments** \u2014 they belong to a linked document\n(e.g. the supplier invoice that created this voucher) rather than the voucher itself.\n\n### Prefer the internal variant\n\nUse `GET .../internal/fileconnections` instead when the company has been synced locally \u2014\nit's faster and works offline. This external variant always hits the live ERP API.",
+                "description": "Discover files (PDFs, images, etc.) attached to a voucher, invoice, or supplier invoice\nby querying the live ERP API.\n\n**This is the first step in a two-step file download workflow:**\n\n1. **Discover files** — call this endpoint with the entity type and document identifiers\n2. **Download a file** — use a `file_id` from the response to call\n   `GET /api/companies/{company_id}/external/archive/{file_id}`\n\n### Parameters\n\n- `entity` — the document type: `voucher`, `invoice`, or `supplierinvoice`\n- `number` — the document number (e.g. `232` for voucher A-232)\n- `series` — voucher series letter (e.g. `A`). Required for vouchers, ignored for invoices/SIs.\n- `financialyear` — the financial year ID (e.g. `7`). Required for vouchers to filter by year.\n\n### Example: Find files attached to voucher A-232 in FY 7\n\n```\nGET /api/companies/{id}/external/fileconnections?entity=voucher&number=232&series=A&financialyear=7\n```\n\nResponse:\n```json\n{\n  \"files\": [\n    {\"file_id\": \"18b596aa-...\", \"name\": \"receipt.pdf\", \"source\": null},\n    {\"file_id\": \"a3c4d5e6-...\", \"name\": \"scan.jpg\", \"source\": \"Supplier Invoice #45\"}\n  ]\n}\n```\n\nFiles with a `source` field are **indirect attachments** — they belong to a linked document\n(e.g. the supplier invoice that created this voucher) rather than the voucher itself.\n\n### Prefer the internal variant\n\nUse `GET .../internal/fileconnections` instead when the company has been synced locally —\nit's faster and works offline. This external variant always hits the live ERP API.",
                 "operationId": "get_file_connections_external_api_companies__company_id__external_fileconnections_get",
                 "parameters": [
                     {
@@ -640,7 +640,7 @@
                     "external-erp"
                 ],
                 "summary": "List file connections (local, recommended)",
-                "description": "Discover files (PDFs, images, etc.) attached to a voucher, invoice, or supplier invoice.\nPrefers locally synced data for speed; falls back to the live ERP API if not synced.\n\n**This is the recommended variant** \u2014 use this instead of the `/external/fileconnections` endpoint\nunless you specifically need live ERP data.\n\n**Two-step file download workflow:**\n\n1. **Discover files** \u2014 call this endpoint with the entity type and document identifiers\n2. **Download a file** \u2014 use a `file_id` from the response to call\n   `GET /api/companies/{company_id}/internal/archive/{file_id}`\n\n### Parameters\n\n- `entity` \u2014 the document type: `voucher`, `invoice`, or `supplierinvoice`\n- `number` \u2014 the document number (e.g. `232` for voucher A-232)\n- `series` \u2014 voucher series letter (e.g. `A`). Required for vouchers, ignored for invoices/SIs.\n- `financialyear` \u2014 the financial year ID (e.g. `7`). Required for vouchers to filter by year.\n\n### Example: Find files attached to voucher A-232 in FY 7\n\n```\nGET /api/companies/{id}/internal/fileconnections?entity=voucher&number=232&series=A&financialyear=7\n```\n\nResponse:\n```json\n{\n  \"files\": [\n    {\"file_id\": \"18b596aa-...\", \"name\": \"receipt.pdf\", \"source\": null}\n  ]\n}\n```\n\n### Fallback behavior\n\nWhen the response includes the header `X-Data-Source: erp-fallback`, it means local data\nwas not available and the response came from the live ERP API instead.",
+                "description": "Discover files (PDFs, images, etc.) attached to a voucher, invoice, or supplier invoice.\nPrefers locally synced data for speed; falls back to the live ERP API if not synced.\n\n**This is the recommended variant** — use this instead of the `/external/fileconnections` endpoint\nunless you specifically need live ERP data.\n\n**Two-step file download workflow:**\n\n1. **Discover files** — call this endpoint with the entity type and document identifiers\n2. **Download a file** — use a `file_id` from the response to call\n   `GET /api/companies/{company_id}/internal/archive/{file_id}`\n\n### Parameters\n\n- `entity` — the document type: `voucher`, `invoice`, or `supplierinvoice`\n- `number` — the document number (e.g. `232` for voucher A-232)\n- `series` — voucher series letter (e.g. `A`). Required for vouchers, ignored for invoices/SIs.\n- `financialyear` — the financial year ID (e.g. `7`). Required for vouchers to filter by year.\n\n### Example: Find files attached to voucher A-232 in FY 7\n\n```\nGET /api/companies/{id}/internal/fileconnections?entity=voucher&number=232&series=A&financialyear=7\n```\n\nResponse:\n```json\n{\n  \"files\": [\n    {\"file_id\": \"18b596aa-...\", \"name\": \"receipt.pdf\", \"source\": null}\n  ]\n}\n```\n\n### Fallback behavior\n\nWhen the response includes the header `X-Data-Source: erp-fallback`, it means local data\nwas not available and the response came from the live ERP API instead.",
                 "operationId": "get_file_connections_internal_api_companies__company_id__internal_fileconnections_get",
                 "parameters": [
                     {
@@ -748,7 +748,7 @@
                     "external-erp"
                 ],
                 "summary": "Download file (live ERP)",
-                "description": "Download a file attachment by its file ID, always from the live ERP API.\n\n**Step 2 of the file download workflow** \u2014 use the `file_id` obtained from the\n`fileconnections` endpoint.\n\n### Parameters\n\n- `file_id` \u2014 the UUID of the file (from the `fileconnections` response)\n- `inline` \u2014 set to `true` to return the file with `Content-Disposition: inline`\n  (renders in browser) instead of as a download\n\n### Example\n\n```\nGET /api/companies/{id}/external/archive/18b596aa-ba25-404b-a218-0269e18c130e\n```\n\nReturns the binary file content with appropriate `Content-Type` header (e.g. `application/pdf`).\n\n### Prefer the internal variant\n\nUse `GET .../internal/archive/{file_id}` instead \u2014 it serves from local storage when\navailable (faster, works offline) and falls back to the ERP API automatically.",
+                "description": "Download a file attachment by its file ID, always from the live ERP API.\n\n**Step 2 of the file download workflow** — use the `file_id` obtained from the\n`fileconnections` endpoint.\n\n### Parameters\n\n- `file_id` — the UUID of the file (from the `fileconnections` response)\n- `inline` — set to `true` to return the file with `Content-Disposition: inline`\n  (renders in browser) instead of as a download\n\n### Example\n\n```\nGET /api/companies/{id}/external/archive/18b596aa-ba25-404b-a218-0269e18c130e\n```\n\nReturns the binary file content with appropriate `Content-Type` header (e.g. `application/pdf`).\n\n### Prefer the internal variant\n\nUse `GET .../internal/archive/{file_id}` instead — it serves from local storage when\navailable (faster, works offline) and falls back to the ERP API automatically.",
                 "operationId": "get_archive_file_external_api_companies__company_id__external_archive__file_id__get",
                 "parameters": [
                     {
@@ -812,7 +812,7 @@
                     "external-erp"
                 ],
                 "summary": "Download file (local, recommended)",
-                "description": "Download a file attachment by its file ID. Serves from local storage when\navailable (fast, works offline), automatically falls back to the live ERP API.\n\n**This is the recommended variant** for downloading files.\n\n**Step 2 of the file download workflow** \u2014 use the `file_id` obtained from the\n`fileconnections` endpoint.\n\n### Complete workflow example\n\nTo download files attached to voucher A-232 in financial year 7:\n\n```\n# Step 1: Discover attached files\nGET /api/companies/{id}/internal/fileconnections?entity=voucher&number=232&series=A&financialyear=7\n\n# Response: {\"files\": [{\"file_id\": \"18b596aa-...\", \"name\": \"receipt.pdf\"}]}\n\n# Step 2: Download a file\nGET /api/companies/{id}/internal/archive/18b596aa-ba25-404b-a218-0269e18c130e\n```\n\nReturns the binary file content with appropriate `Content-Type` header (e.g. `application/pdf`).\n\n### Parameters\n\n- `file_id` \u2014 the UUID of the file (from the `fileconnections` response)\n- `inline` \u2014 set to `true` for in-browser rendering instead of download\n\n### Fallback behavior\n\nWhen the response includes the header `X-Data-Source: erp-fallback`, it means the file\nwas not available locally and was streamed from the live ERP API instead.",
+                "description": "Download a file attachment by its file ID. Serves from local storage when\navailable (fast, works offline), automatically falls back to the live ERP API.\n\n**This is the recommended variant** for downloading files.\n\n**Step 2 of the file download workflow** — use the `file_id` obtained from the\n`fileconnections` endpoint.\n\n### Complete workflow example\n\nTo download files attached to voucher A-232 in financial year 7:\n\n```\n# Step 1: Discover attached files\nGET /api/companies/{id}/internal/fileconnections?entity=voucher&number=232&series=A&financialyear=7\n\n# Response: {\"files\": [{\"file_id\": \"18b596aa-...\", \"name\": \"receipt.pdf\"}]}\n\n# Step 2: Download a file\nGET /api/companies/{id}/internal/archive/18b596aa-ba25-404b-a218-0269e18c130e\n```\n\nReturns the binary file content with appropriate `Content-Type` header (e.g. `application/pdf`).\n\n### Parameters\n\n- `file_id` — the UUID of the file (from the `fileconnections` response)\n- `inline` — set to `true` for in-browser rendering instead of download\n\n### Fallback behavior\n\nWhen the response includes the header `X-Data-Source: erp-fallback`, it means the file\nwas not available locally and was streamed from the live ERP API instead.",
                 "operationId": "get_archive_file_internal_api_companies__company_id__internal_archive__file_id__get",
                 "parameters": [
                     {
@@ -876,7 +876,7 @@
                     "external-erp"
                 ],
                 "summary": "List all records that reference a file",
-                "description": "Returns every `erp_file_refs` row pointing at the given `file_id` for this company. Useful to determine whether a file is genuinely orphan (zero rows) or merely navigated to directly (one+ rows). Each row carries the doc_type, record_id, financial_year_id, filename, and discovered_at \u2014 enough to render a 'Used by' list and link back to the parent records.",
+                "description": "Returns every `erp_file_refs` row pointing at the given `file_id` for this company. Useful to determine whether a file is genuinely orphan (zero rows) or merely navigated to directly (one+ rows). Each row carries the doc_type, record_id, financial_year_id, filename, and discovered_at — enough to render a 'Used by' list and link back to the parent records.",
                 "operationId": "list_file_refs_api_companies__company_id__files__file_id__refs_get",
                 "parameters": [
                     {
@@ -932,7 +932,7 @@
                     "external-erp"
                 ],
                 "summary": "Re-download a file binary from the ERP into local storage",
-                "description": "Fetches the file via the ERP's archive endpoint and overwrites the S3 object so the local copy matches the ERP. Distinct from the metadata-check refresh under /refs which only re-queries `erp_file_refs`. Does NOT touch erp_file_refs rows or trigger a record sync \u2014 use the owning record's /refresh for that.",
+                "description": "Fetches the file via the ERP's archive endpoint and overwrites the S3 object so the local copy matches the ERP. Distinct from the metadata-check refresh under /refs which only re-queries `erp_file_refs`. Does NOT touch erp_file_refs rows or trigger a record sync — use the owning record's /refresh for that.",
                 "operationId": "refresh_file_binary_api_companies__company_id__files__file_id__refresh_post",
                 "parameters": [
                     {
@@ -1538,7 +1538,7 @@
                     "external-erp"
                 ],
                 "summary": "Batch file-connection counts",
-                "description": "Returns the number of attached files per document for an entire entity type in a single call.\n\nUsed to show file attachment indicators (e.g. paperclip icons) on list views without\nmaking per-record API calls.\n\n### Parameters\n\n- `entity` \u2014 the document type: `voucher`, `invoice`, or `supplierinvoice`\n- `financialyear` \u2014 financial year ID to filter vouchers by year\n\n### Example\n\n```\nGET /api/companies/{id}/fileconnection-counts?entity=voucher&financialyear=7\n```\n\nResponse:\n```json\n{\"counts\": {\"A232\": 1, \"A233\": 2, \"B15\": 1}}\n```\n\nKeys are the document identifier (series+number for vouchers, number for invoices/SIs).\nValues are the number of attached files.",
+                "description": "Returns the number of attached files per document for an entire entity type in a single call.\n\nUsed to show file attachment indicators (e.g. paperclip icons) on list views without\nmaking per-record API calls.\n\n### Parameters\n\n- `entity` — the document type: `voucher`, `invoice`, or `supplierinvoice`\n- `financialyear` — financial year ID to filter vouchers by year\n\n### Example\n\n```\nGET /api/companies/{id}/fileconnection-counts?entity=voucher&financialyear=7\n```\n\nResponse:\n```json\n{\"counts\": {\"A232\": 1, \"A233\": 2, \"B15\": 1}}\n```\n\nKeys are the document identifier (series+number for vouchers, number for invoices/SIs).\nValues are the number of attached files.",
                 "operationId": "get_fileconnection_counts_api_companies__company_id__fileconnection_counts_get",
                 "parameters": [
                     {
@@ -1649,7 +1649,7 @@
                     "external-erp"
                 ],
                 "summary": "Download inbox file",
-                "description": "Download a file from the ERP inbox by its file ID.\n\nInbox files are documents uploaded to the ERP's document inbox (e.g. scanned receipts,\nsupplier invoices awaiting processing). They are distinct from file **attachments** on\nvouchers/invoices \u2014 those are accessed via the `archive` endpoints instead.\n\nServes from local storage when available, falls back to the live ERP API.\n\n### Example\n\n```\nGET /api/companies/{id}/inbox/file/abc123-def456\n```\n\nReturns the binary file content with appropriate `Content-Type` header.",
+                "description": "Download a file from the ERP inbox by its file ID.\n\nInbox files are documents uploaded to the ERP's document inbox (e.g. scanned receipts,\nsupplier invoices awaiting processing). They are distinct from file **attachments** on\nvouchers/invoices — those are accessed via the `archive` endpoints instead.\n\nServes from local storage when available, falls back to the live ERP API.\n\n### Example\n\n```\nGET /api/companies/{id}/inbox/file/abc123-def456\n```\n\nReturns the binary file content with appropriate `Content-Type` header.",
                 "operationId": "get_inbox_file_api_companies__company_id__inbox_file__file_id__get",
                 "parameters": [
                     {
@@ -2389,7 +2389,7 @@
                     "sync"
                 ],
                 "summary": "List locally synced inbox files",
-                "description": "Requires authentication. Lists inbox files from erp_records with folder filter, search, and pagination.\n\n**Search syntax** (same shape as `/api/xcompanies/files`):\n- Bare term: case-insensitive substring across Name + Id + Comments.\n- `name:SKV` \u2014 case-sensitive substring on file name.\n- `id:abc` \u2014 case-insensitive substring on file ID.\n- `comment:tax` \u2014 case-insensitive substring on Comments.\n- `name:/^SKV.*/` \u2014 regex (append `/i` for case-insensitive).\n- Combine clauses with spaces \u2014 they AND together.\n\nFiltering is evaluated in Python here, so regex works regardless of the DB dialect \u2014 `search_warning` in the response will always be null.",
+                "description": "Requires authentication. Lists inbox files from erp_records with folder filter, search, and pagination.\n\n**Search syntax** (same shape as `/api/xcompanies/files`):\n- Bare term: case-insensitive substring across Name + Id + Comments.\n- `name:SKV` — case-sensitive substring on file name.\n- `id:abc` — case-insensitive substring on file ID.\n- `comment:tax` — case-insensitive substring on Comments.\n- `name:/^SKV.*/` — regex (append `/i` for case-insensitive).\n- Combine clauses with spaces — they AND together.\n\nFiltering is evaluated in Python here, so regex works regardless of the DB dialect — `search_warning` in the response will always be null.",
                 "operationId": "list_local_inbox_api_companies__company_id__internal_inbox_get",
                 "parameters": [
                     {
@@ -2544,7 +2544,7 @@
                     "sync"
                 ],
                 "summary": "List all synced file attachments",
-                "description": "Requires authentication. Lists file refs from erp_file_refs with pagination, filters, and search.\n\n**Search syntax:**\n- Bare term: case-insensitive substring across filename + file_id + comments.\n- `name:SKV` \u2014 case-sensitive substring on filename.\n- `id:abc` \u2014 case-insensitive substring on file_id.\n- `comment:tax` \u2014 case-insensitive substring on Comments.\n- `name:/^SKV.*/` \u2014 POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces \u2014 they AND together.\n\nRegex degrades to a substring fallback on SQLite (local dev); response carries `search_warning` when that happens.",
+                "description": "Requires authentication. Lists file refs from erp_file_refs with pagination, filters, and search.\n\n**Search syntax:**\n- Bare term: case-insensitive substring across filename + file_id + comments.\n- `name:SKV` — case-sensitive substring on filename.\n- `id:abc` — case-insensitive substring on file_id.\n- `comment:tax` — case-insensitive substring on Comments.\n- `name:/^SKV.*/` — POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces — they AND together.\n\nRegex degrades to a substring fallback on SQLite (local dev); response carries `search_warning` when that happens.",
                 "operationId": "list_files_api_companies__company_id__internal_files_get",
                 "parameters": [
                     {
@@ -3827,7 +3827,7 @@
                     "bk-staging"
                 ],
                 "summary": "DEPRECATED: pushes to Fortnox immediately. Use POST /api/bk-staging/{action_id}/upload-file instead.",
-                "description": "**410 Gone.** This endpoint pushed files to Fortnox at upload time, which orphaned files in Fortnox when the staged action was later rejected. Use `POST /api/bk-staging/{action_id}/upload-file` \u2014 it stores the file locally and pushes to Fortnox only when the action executes.",
+                "description": "**410 Gone.** This endpoint pushed files to Fortnox at upload time, which orphaned files in Fortnox when the staged action was later rejected. Use `POST /api/bk-staging/{action_id}/upload-file` — it stores the file locally and pushes to Fortnox only when the action executes.",
                 "operationId": "upload_file_deprecated_api_companies__company_id__bk_staging_upload_file_post",
                 "parameters": [
                     {
@@ -4343,13 +4343,13 @@
                     "bk-staging"
                 ],
                 "summary": "Move still-pending staged uploads from one action to another (assistant+)",
-                "description": "Requires authentication. Re-points pending_push Booker uploads from `from_action_id` to `to_action_id` (no S3 copy \u2014 the file keys are company-scoped, not action-scoped). Used by the BK Edit Save flow, which creates a fresh action under a new id and rejects the old one.",
+                "description": "Requires authentication. Re-points pending_push Booker uploads from `from_action_id` to `to_action_id` (no S3 copy — the file keys are company-scoped, not action-scoped). Used by the BK Edit Save flow, which creates a fresh action under a new id and rejects the old one.",
                 "operationId": "transfer_uploads_api_bk_staging_uploads_transfer_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/TransferUploadsRequest"
+                                "$ref": "#/components/schemas/app__api__bk_staging__TransferUploadsRequest"
                             }
                         }
                     },
@@ -4576,7 +4576,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/ExecuteRequest"
+                                "$ref": "#/components/schemas/app__api__bk_staging__ExecuteRequest"
                             }
                         }
                     },
@@ -4591,6 +4591,896 @@
                                     "additionalProperties": true,
                                     "type": "object",
                                     "title": "Response Execute Actions Api Bk Staging Execute Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/companies/{company_id}/bko": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Stage a Bookkeeping Operation",
+                "description": "Stage a new BKO under a company. Returns the persisted BKO in the nested wire shape.",
+                "operationId": "stage_bko_api_companies__company_id__bko_post",
+                "parameters": [
+                    {
+                        "name": "company_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Company Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BkoCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Stage Bko Api Companies  Company Id  Bko Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "List BKOs for a company",
+                "operationId": "list_company_bkos_api_companies__company_id__bko_get",
+                "parameters": [
+                    {
+                        "name": "company_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Company Id"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "",
+                            "title": "Status"
+                        }
+                    },
+                    {
+                        "name": "entity_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "",
+                            "title": "Entity Type"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response List Company Bkos Api Companies  Company Id  Bko Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko": {
+            "get": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "List BKOs across all companies",
+                "operationId": "list_all_bkos_api_bko_get",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "",
+                            "title": "Status"
+                        }
+                    },
+                    {
+                        "name": "entity_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "",
+                            "title": "Entity Type"
+                        }
+                    },
+                    {
+                        "name": "target_series",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Target Series"
+                        }
+                    },
+                    {
+                        "name": "target_number",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Target Number"
+                        }
+                    },
+                    {
+                        "name": "financial_year_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Financial Year Id"
+                        }
+                    },
+                    {
+                        "name": "group",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Group"
+                        }
+                    },
+                    {
+                        "name": "conf_min",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Conf Min"
+                        }
+                    },
+                    {
+                        "name": "conf_max",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Conf Max"
+                        }
+                    },
+                    {
+                        "name": "producer_label",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Producer Label"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response List All Bkos Api Bko Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}": {
+            "get": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Get a BKO by id",
+                "operationId": "get_bko_api_bko__bko_id__get",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Get Bko Api Bko  Bko Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Partial update on a BKO (JSON Merge Patch, whitelisted)",
+                "description": "Whitelisted partial update. Trust changes (confidence) auto-append\nan audit-trail line to `trust.reasoning`. Status transitions stay on\ntheir dedicated endpoints — PATCH won't move lifecycle.",
+                "operationId": "patch_bko_api_bko__bko_id__patch",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BkoPatch"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Patch Bko Api Bko  Bko Id  Patch"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/approve": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Approve a staged BKO",
+                "operationId": "approve_bko_api_bko__bko_id__approve_post",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Approve Bko Api Bko  Bko Id  Approve Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/reject": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Reject a staged or approved BKO",
+                "operationId": "reject_bko_api_bko__bko_id__reject_post",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Reject Bko Api Bko  Bko Id  Reject Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/archive": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Archive a failed or rejected BKO (owner only)",
+                "operationId": "archive_bko_api_bko__bko_id__archive_post",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Archive Bko Api Bko  Bko Id  Archive Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/archive": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Archive multiple rejected/failed BKOs (owner only)",
+                "operationId": "archive_many_bkos_api_bko_archive_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ArchiveManyRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {
+                                        "type": "integer"
+                                    },
+                                    "type": "object",
+                                    "title": "Response Archive Many Bkos Api Bko Archive Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/resume": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Clear execution_paused on an approved BKO",
+                "operationId": "resume_bko_api_bko__bko_id__resume_post",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Resume Bko Api Bko  Bko Id  Resume Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/execute": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Execute approved BKOs (accountant+)",
+                "description": "Sequential execution of approved BKOs. On failure within a company, remaining approved BKOs for the same company are paused. Per-result rows return status, the resulting ERP record id, and any deviation diff.",
+                "operationId": "execute_bkos_api_bko_execute_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/app__api__bko__ExecuteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Execute Bkos Api Bko Execute Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/clone": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Clone a BKO into a fresh staged copy (assistant+)",
+                "description": "Carries command, trust, provenance, groups, and file_refs forward into a new staged BKO. Used to re-vouch a failed/rejected BKO with edits — confidence stays immutable on the original; trust mutations happen on the clone. File refs are dropped when the source already executed (those file IDs were consumed by Fortnox). Pending Booker uploads (not yet pushed to Fortnox) are copied to the clone so the user doesn't have to re-upload attachments after a retry.",
+                "operationId": "clone_bko_api_bko__bko_id__clone_post",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Clone Bko Api Bko  Bko Id  Clone Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/uploads": {
+            "get": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "List staged uploads for a BKO",
+                "operationId": "list_uploads_for_bko_api_bko__bko_id__uploads_get",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response List Uploads For Bko Api Bko  Bko Id  Uploads Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/uploads/{file_id}": {
+            "delete": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Remove a pending staged upload (assistant+ for own, accountant+ for any)",
+                "description": "Only allowed while the BKO is in 'staged' status. Hard-deletes the local file + row.",
+                "operationId": "delete_upload_for_bko_api_bko__bko_id__uploads__file_id__delete",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    },
+                    {
+                        "name": "file_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "File Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Delete Upload For Bko Api Bko  Bko Id  Uploads  File Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/uploads/transfer": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Move pending uploads from one BKO to another (assistant+ for own, accountant+ for any)",
+                "description": "Re-points pending_push Booker uploads from from_bko_id to to_bko_id. Used by the edit-save flow when the form sidesteps PATCH (because command shape changes more than PATCH allows) — without this the uploads stay orphaned on the soon-to-be-rejected source.",
+                "operationId": "transfer_uploads_api_bko_uploads_transfer_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/app__api__bko__TransferUploadsRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {
+                                        "type": "integer"
+                                    },
+                                    "type": "object",
+                                    "title": "Response Transfer Uploads Api Bko Uploads Transfer Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bko/{bko_id}/upload-file": {
+            "post": {
+                "tags": [
+                    "bko"
+                ],
+                "summary": "Stage a file upload for a BKO (assistant+ for own, accountant+ for any)",
+                "description": "Writes the file to local storage and links it to the BKO. The file is pushed to Fortnox only when the BKO executes. Only allowed while the BKO is in 'staged' status.",
+                "operationId": "upload_file_for_bko_api_bko__bko_id__upload_file_post",
+                "parameters": [
+                    {
+                        "name": "bko_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Bko Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_upload_file_for_bko_api_bko__bko_id__upload_file_post"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true,
+                                    "title": "Response Upload File For Bko Api Bko  Bko Id  Upload File Post"
                                 }
                             }
                         }
@@ -4970,7 +5860,7 @@
                     "xcompanies"
                 ],
                 "summary": "Cross-company file list",
-                "description": "List files (erp_file_refs) across all companies. Same filters and pagination as the per-company variant; every row carries `company_id` (UUID) + `company_name`.\n\n**Search syntax** \u2014 the `search` parameter accepts:\n- Bare term: case-insensitive substring across filename + file_id + comments.\n- `name:SKV` \u2014 case-sensitive substring on filename only.\n- `id:abc` \u2014 case-insensitive substring on file_id.\n- `comment:tax` \u2014 case-insensitive substring on the inbox Comments field.\n- `name:/^SKV.*/` \u2014 POSIX regex on filename (append `/i` for case-insensitive).\n- Combine clauses with spaces \u2014 they AND together.\n\nRegex degrades to a substring fallback on SQLite (local dev) and the response carries a `search_warning` string when that happens.",
+                "description": "List files (erp_file_refs) across all companies. Same filters and pagination as the per-company variant; every row carries `company_id` (UUID) + `company_name`.\n\n**Search syntax** — the `search` parameter accepts:\n- Bare term: case-insensitive substring across filename + file_id + comments.\n- `name:SKV` — case-sensitive substring on filename only.\n- `id:abc` — case-insensitive substring on file_id.\n- `comment:tax` — case-insensitive substring on the inbox Comments field.\n- `name:/^SKV.*/` — POSIX regex on filename (append `/i` for case-insensitive).\n- Combine clauses with spaces — they AND together.\n\nRegex degrades to a substring fallback on SQLite (local dev) and the response carries a `search_warning` string when that happens.",
                 "operationId": "list_files_cross_company_api_xcompanies_files_get",
                 "parameters": [
                     {
@@ -5096,7 +5986,7 @@
                     "xcompanies"
                 ],
                 "summary": "Bulk-download selected files as a zip",
-                "description": "Stream a zip containing the requested (company_id, file_id) pairs. Files are pulled from local file storage only \u2014 the endpoint does not fall back to a live ERP fetch, so files that haven't been synced to local storage are listed in `_skipped.txt` inside the zip. Hard caps: 100 files per request, 500 MB uncompressed total.",
+                "description": "Stream a zip containing the requested (company_id, file_id) pairs. Files are pulled from local file storage only — the endpoint does not fall back to a live ERP fetch, so files that haven't been synced to local storage are listed in `_skipped.txt` inside the zip. Hard caps: 100 files per request, 500 MB uncompressed total.",
                 "operationId": "bulk_download_files_api_xcompanies_files_download_post",
                 "requestBody": {
                     "content": {
@@ -5136,7 +6026,7 @@
                     "xcompanies"
                 ],
                 "summary": "Cross-company voucher list (local DB)",
-                "description": "Lists `erp_records` of doc_type=vouchers across all companies.\n\n**Filters:** `search` (see below), TransactionDate range (`from_date`/`to_date`, YYYY-MM-DD), `series`/`number` (exact match on JSON `VoucherSeries`/`VoucherNumber`).\n\n**Search syntax:**\n- Bare term: case-insensitive substring across the whole stored JSON (legacy behavior).\n- `description:Utbetalning` \u2014 substring on Description (alias `desc:`).\n- `account:1930` \u2014 substring scan of serialized VoucherRows (matches account numbers and TransactionInformation text).\n- `company:Uppsala` \u2014 substring on the company name (alias `co:`).\n- `description:/^Ut.*/` \u2014 POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces \u2014 they AND together.\n\nRegex degrades to a substring fallback on SQLite (local dev); response carries `search_warning` when that happens.",
+                "description": "Lists `erp_records` of doc_type=vouchers across all companies.\n\n**Filters:** `search` (see below), TransactionDate range (`from_date`/`to_date`, YYYY-MM-DD), `series`/`number` (exact match on JSON `VoucherSeries`/`VoucherNumber`).\n\n**Search syntax:**\n- Bare term: case-insensitive substring across the whole stored JSON (legacy behavior).\n- `description:Utbetalning` — substring on Description (alias `desc:`).\n- `account:1930` — substring scan of serialized VoucherRows (matches account numbers and TransactionInformation text).\n- `company:Uppsala` — substring on the company name (alias `co:`).\n- `description:/^Ut.*/` — POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces — they AND together.\n\nRegex degrades to a substring fallback on SQLite (local dev); response carries `search_warning` when that happens.",
                 "operationId": "list_vouchers_cross_company_api_xcompanies_vouchers_get",
                 "parameters": [
                     {
@@ -5270,7 +6160,7 @@
                     "xcompanies"
                 ],
                 "summary": "Cross-company invoice list (local DB)",
-                "description": "Lists `erp_records` of doc_type=invoices across all companies.\n\n**Filters:** `search` (see below), InvoiceDate range (`from_date`/`to_date`, YYYY-MM-DD).\n\n**Search syntax:**\n- Bare term: case-insensitive substring across the whole stored JSON.\n- `customer:Foodora` \u2014 substring on CustomerName (alias `cust:`).\n- `company:Uppsala` \u2014 substring on the company name (alias `co:`).\n- `customer:/^Foo.*/` \u2014 POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces \u2014 they AND together.\n\nRegex degrades on SQLite (local dev); response carries `search_warning` when that happens.",
+                "description": "Lists `erp_records` of doc_type=invoices across all companies.\n\n**Filters:** `search` (see below), InvoiceDate range (`from_date`/`to_date`, YYYY-MM-DD).\n\n**Search syntax:**\n- Bare term: case-insensitive substring across the whole stored JSON.\n- `customer:Foodora` — substring on CustomerName (alias `cust:`).\n- `company:Uppsala` — substring on the company name (alias `co:`).\n- `customer:/^Foo.*/` — POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces — they AND together.\n\nRegex degrades on SQLite (local dev); response carries `search_warning` when that happens.",
                 "operationId": "list_invoices_cross_company_api_xcompanies_invoices_get",
                 "parameters": [
                     {
@@ -5380,7 +6270,7 @@
                     "xcompanies"
                 ],
                 "summary": "Cross-company supplier-invoice list (local DB)",
-                "description": "Lists `erp_records` of doc_type=supplierinvoices across all companies.\n\n**Filters:** `search` (see below), InvoiceDate range (`from_date`/`to_date`, YYYY-MM-DD).\n\n**Search syntax:**\n- Bare term: case-insensitive substring across the whole stored JSON.\n- `supplier:Telia` \u2014 substring on SupplierName (alias `sup:`).\n- `company:Uppsala` \u2014 substring on the company name (alias `co:`).\n- `supplier:/^Tel.*/` \u2014 POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces \u2014 they AND together.\n\nRegex degrades on SQLite (local dev); response carries `search_warning` when that happens.",
+                "description": "Lists `erp_records` of doc_type=supplierinvoices across all companies.\n\n**Filters:** `search` (see below), InvoiceDate range (`from_date`/`to_date`, YYYY-MM-DD).\n\n**Search syntax:**\n- Bare term: case-insensitive substring across the whole stored JSON.\n- `supplier:Telia` — substring on SupplierName (alias `sup:`).\n- `company:Uppsala` — substring on the company name (alias `co:`).\n- `supplier:/^Tel.*/` — POSIX regex (append `/i` for case-insensitive).\n- Combine clauses with spaces — they AND together.\n\nRegex degrades on SQLite (local dev); response carries `search_warning` when that happens.",
                 "operationId": "list_supplierinvoices_cross_company_api_xcompanies_supplierinvoices_get",
                 "parameters": [
                     {
@@ -7531,7 +8421,7 @@
                     "developer"
                 ],
                 "summary": "Diagnose file-connection lookup for a record",
-                "description": "Dumps every input/output involved in deciding whether a voucher, invoice, or\nsupplier invoice has attached files. Use to investigate cases where IFN shows \"No attachments\"\nbut the user knows the ERP has files for the record.\n\nEach step records its raw response (or the error), so a Fortnox `ErrorInformation` envelope \u2014\nwhich would otherwise be silently treated as \"no files\" \u2014 is visible here.\n\n### Steps captured\n\n1. **local_db** \u2014 `erp_file_refs` rows matching the record (and unfiltered, for cross-FY checks)\n2. **fortnox_direct** \u2014 raw `voucherfileconnections` / `invoicefileconnections` / `supplierinvoicefileconnections` response\n3. **voucher_detail** \u2014 full voucher record (for vouchers only); shows `ReferenceType` / `ReferenceNumber`\n4. **fortnox_indirect** \u2014 if the voucher references an entity we follow, the raw indirect response\n\nDeveloper-only. Hits the live ERP \u2014 counts toward the rate limit.",
+                "description": "Dumps every input/output involved in deciding whether a voucher, invoice, or\nsupplier invoice has attached files. Use to investigate cases where IFN shows \"No attachments\"\nbut the user knows the ERP has files for the record.\n\nEach step records its raw response (or the error), so a Fortnox `ErrorInformation` envelope —\nwhich would otherwise be silently treated as \"no files\" — is visible here.\n\n### Steps captured\n\n1. **local_db** — `erp_file_refs` rows matching the record (and unfiltered, for cross-FY checks)\n2. **fortnox_direct** — raw `voucherfileconnections` / `invoicefileconnections` / `supplierinvoicefileconnections` response\n3. **voucher_detail** — full voucher record (for vouchers only); shows `ReferenceType` / `ReferenceNumber`\n4. **fortnox_indirect** — if the voucher references an entity we follow, the raw indirect response\n\nDeveloper-only. Hits the live ERP — counts toward the rate limit.",
                 "operationId": "diagnose_file_connections_api_developer_companies__company_id__file_connections_diagnose_get",
                 "parameters": [
                     {
@@ -7945,7 +8835,7 @@
                     "developer"
                 ],
                 "summary": "Reconcile vouchers stored under the legacy 'series/number' record_id form",
-                "description": "For each voucher row with a slash-format record_id, DELETE it if the\ncanonical no-slash row already exists, otherwise UPDATE its record_id\nto the no-slash form. Runs for both erp_records and erp_file_refs.\n\nIdempotent \u2014 re-running after a clean state finds zero rows.",
+                "description": "For each voucher row with a slash-format record_id, DELETE it if the\ncanonical no-slash row already exists, otherwise UPDATE its record_id\nto the no-slash form. Runs for both erp_records and erp_file_refs.\n\nIdempotent — re-running after a clean state finds zero rows.",
                 "operationId": "cleanup_slash_voucher_ids_api_developer_syshealth_cleanup_slash_voucher_ids_post",
                 "responses": {
                     "200": {
@@ -7969,7 +8859,7 @@
                     "developer"
                 ],
                 "summary": "File storage stats (on-demand)",
-                "description": "Return file storage stats from both S3 bucket and local DB.\n\nBucket stats may be slow for large buckets \u2014 intended for on-demand use.",
+                "description": "Return file storage stats from both S3 bucket and local DB.\n\nBucket stats may be slow for large buckets — intended for on-demand use.",
                 "operationId": "file_stats_api_developer_syshealth_file_stats_get",
                 "responses": {
                     "200": {
@@ -8039,7 +8929,7 @@
                     "developer"
                 ],
                 "summary": "Delete a single file's binary from bucket storage (developer-only)",
-                "description": "Targeted bucket delete for a single file_id under a single company.\n\nIntended for use from the file detail page when a file is confirmed\norphan (zero rows in erp_file_refs). Only deletes the S3 binary \u2014\ndoes not touch DB. Refuses if the file_id has any erp_file_refs row\nin the local DB (safety: caller must clean refs first if intended).",
+                "description": "Targeted bucket delete for a single file_id under a single company.\n\nIntended for use from the file detail page when a file is confirmed\norphan (zero rows in erp_file_refs). Only deletes the S3 binary —\ndoes not touch DB. Refuses if the file_id has any erp_file_refs row\nin the local DB (safety: caller must clean refs first if intended).",
                 "operationId": "file_storage_delete_one_api_developer_syshealth_file_storage_delete_one_post",
                 "parameters": [
                     {
@@ -8652,7 +9542,7 @@
                 "tags": [
                     "api-keys"
                 ],
-                "summary": "Rotate a key \u2014 owner-initiated (immediate)",
+                "summary": "Rotate a key — owner-initiated (immediate)",
                 "description": "Owner-initiated rotation: immediately replaces the key hash.",
                 "operationId": "owner_rotate_key_api_api_keys__key_id__rotate_post",
                 "parameters": [
@@ -8775,7 +9665,7 @@
                     "api-provision"
                 ],
                 "summary": "Confirm API key provisioning",
-                "description": "Owner confirms \u2192 create user+key, generate auth code, redirect back.",
+                "description": "Owner confirms → create user+key, generate auth code, redirect back.",
                 "operationId": "provision_confirm_auth_api_provision_confirm_post",
                 "responses": {
                     "200": {
@@ -8863,6 +9753,23 @@
                 ],
                 "title": "AccountDescriptionResponse"
             },
+            "ArchiveManyRequest": {
+                "properties": {
+                    "bko_ids": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "title": "Bko Ids"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "bko_ids"
+                ],
+                "title": "ArchiveManyRequest"
+            },
             "ArchiveRequest": {
                 "properties": {
                     "action_ids": {
@@ -8879,6 +9786,78 @@
                 ],
                 "title": "ArchiveRequest"
             },
+            "BkoCreate": {
+                "properties": {
+                    "command": {
+                        "$ref": "#/components/schemas/CommandIn"
+                    },
+                    "trust": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TrustIn"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "provenance": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ProvenanceIn"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "groups": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Groups"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "command"
+                ],
+                "title": "BkoCreate"
+            },
+            "BkoPatch": {
+                "properties": {
+                    "trust": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TrustPatch"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "groups": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Groups"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "BkoPatch",
+                "description": "PATCH /api/bko/{id} — JSON Merge Patch on a whitelisted subset.\n\nProvided keys overwrite, omitted keys preserved. Server enforces:\ntrust.confidence triggers an auto-append on trust.reasoning;\ngroups replaces the set."
+            },
             "Body_upload_file_for_action_api_bk_staging__action_id__upload_file_post": {
                 "properties": {
                     "file": {
@@ -8892,6 +9871,45 @@
                     "file"
                 ],
                 "title": "Body_upload_file_for_action_api_bk_staging__action_id__upload_file_post"
+            },
+            "Body_upload_file_for_bko_api_bko__bko_id__upload_file_post": {
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "contentMediaType": "application/octet-stream",
+                        "title": "File"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "file"
+                ],
+                "title": "Body_upload_file_for_bko_api_bko__bko_id__upload_file_post"
+            },
+            "CommandIn": {
+                "properties": {
+                    "entity_type": {
+                        "type": "string",
+                        "title": "Entity Type"
+                    },
+                    "action": {
+                        "type": "string",
+                        "title": "Action",
+                        "default": "create"
+                    },
+                    "erp_payload": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Erp Payload"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "entity_type",
+                    "erp_payload"
+                ],
+                "title": "CommandIn"
             },
             "CompanyFlagsResponse": {
                 "properties": {
@@ -9068,22 +10086,6 @@
                 ],
                 "title": "CreateKeyRequest"
             },
-            "ExecuteRequest": {
-                "properties": {
-                    "action_ids": {
-                        "items": {
-                            "type": "integer"
-                        },
-                        "type": "array",
-                        "title": "Action Ids"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "action_ids"
-                ],
-                "title": "ExecuteRequest"
-            },
             "FileConnection": {
                 "properties": {
                     "file_id": {
@@ -9207,7 +10209,7 @@
                     "file_ids"
                 ],
                 "title": "FileMetadataBulkPatch",
-                "description": "Bulk-set category/group_id on a list of file_ids. Each field follows\nthe same \"sent vs absent\" semantics as the single-file PATCH \u2014 a field\nomitted from the request body keeps its existing per-file value; a field\nsent as null clears it. Marks every touched file with manual_override=1."
+                "description": "Bulk-set category/group_id on a list of file_ids. Each field follows\nthe same \"sent vs absent\" semantics as the single-file PATCH — a field\nomitted from the request body keeps its existing per-file value; a field\nsent as null clears it. Marks every touched file with manual_override=1."
             },
             "FileMetadataPatch": {
                 "properties": {
@@ -9471,10 +10473,51 @@
                             }
                         ],
                         "title": "Accounting Reasoning"
+                    },
+                    "confidence": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Confidence"
                     }
                 },
                 "type": "object",
                 "title": "PatchActionRequest"
+            },
+            "ProvenanceIn": {
+                "properties": {
+                    "producer_label": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Producer Label"
+                    },
+                    "agent_metadata": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Agent Metadata"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "ProvenanceIn"
             },
             "PurgeJobRequest": {
                 "properties": {
@@ -10002,23 +11045,61 @@
                 ],
                 "title": "TokenExchangeRequest"
             },
-            "TransferUploadsRequest": {
+            "TrustIn": {
                 "properties": {
-                    "from_action_id": {
-                        "type": "integer",
-                        "title": "From Action Id"
+                    "confidence": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "maximum": 1.0,
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Confidence"
                     },
-                    "to_action_id": {
-                        "type": "integer",
-                        "title": "To Action Id"
+                    "reasoning": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Reasoning"
+                    },
+                    "remarks": {
+                        "items": {},
+                        "type": "array",
+                        "title": "Remarks"
                     }
                 },
+                "additionalProperties": false,
                 "type": "object",
-                "required": [
-                    "from_action_id",
-                    "to_action_id"
-                ],
-                "title": "TransferUploadsRequest"
+                "title": "TrustIn"
+            },
+            "TrustPatch": {
+                "properties": {
+                    "confidence": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "maximum": 1.0,
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Confidence"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "TrustPatch"
             },
             "UpdateSettingsRequest": {
                 "properties": {
@@ -10159,13 +11240,83 @@
                     "file_id"
                 ],
                 "title": "_BulkFileRef"
+            },
+            "app__api__bk_staging__ExecuteRequest": {
+                "properties": {
+                    "action_ids": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "title": "Action Ids"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "action_ids"
+                ],
+                "title": "ExecuteRequest"
+            },
+            "app__api__bk_staging__TransferUploadsRequest": {
+                "properties": {
+                    "from_action_id": {
+                        "type": "integer",
+                        "title": "From Action Id"
+                    },
+                    "to_action_id": {
+                        "type": "integer",
+                        "title": "To Action Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "from_action_id",
+                    "to_action_id"
+                ],
+                "title": "TransferUploadsRequest"
+            },
+            "app__api__bko__ExecuteRequest": {
+                "properties": {
+                    "bko_ids": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "title": "Bko Ids"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "bko_ids"
+                ],
+                "title": "ExecuteRequest"
+            },
+            "app__api__bko__TransferUploadsRequest": {
+                "properties": {
+                    "from_bko_id": {
+                        "type": "integer",
+                        "title": "From Bko Id"
+                    },
+                    "to_bko_id": {
+                        "type": "integer",
+                        "title": "To Bko Id"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "from_bko_id",
+                    "to_bko_id"
+                ],
+                "title": "TransferUploadsRequest"
             }
         }
     },
     "tags": [
         {
             "name": "external-erp",
-            "description": "ERP data access \u2014 browse records, download files, and query the external ERP system.\n\n### File attachments workflow\n\nVouchers, invoices, and supplier invoices can have file attachments (PDFs, images, etc.).\nTo find and download these files:\n\n1. **Discover files** \u2014 `GET /api/companies/{id}/internal/fileconnections?entity=voucher&number=232&series=A&financialyear=7`\n2. **Download a file** \u2014 `GET /api/companies/{id}/internal/archive/{file_id}` using a `file_id` from step 1\n\nThe `internal` variants serve from local storage (fast, offline-capable) with automatic ERP fallback.\nThe `external` variants always query the live ERP API.\n\n### Inbox vs archive files\n\n- **Archive files** (`/archive/{file_id}`) \u2014 attachments linked to specific vouchers, invoices, or supplier invoices\n- **Inbox files** (`/inbox/file/{file_id}`) \u2014 documents in the ERP inbox (scanned receipts, unprocessed invoices)\n"
+            "description": "ERP data access — browse records, download files, and query the external ERP system.\n\n### File attachments workflow\n\nVouchers, invoices, and supplier invoices can have file attachments (PDFs, images, etc.).\nTo find and download these files:\n\n1. **Discover files** — `GET /api/companies/{id}/internal/fileconnections?entity=voucher&number=232&series=A&financialyear=7`\n2. **Download a file** — `GET /api/companies/{id}/internal/archive/{file_id}` using a `file_id` from step 1\n\nThe `internal` variants serve from local storage (fast, offline-capable) with automatic ERP fallback.\nThe `external` variants always query the live ERP API.\n\n### Inbox vs archive files\n\n- **Archive files** (`/archive/{file_id}`) — attachments linked to specific vouchers, invoices, or supplier invoices\n- **Inbox files** (`/inbox/file/{file_id}`) — documents in the ERP inbox (scanned receipts, unprocessed invoices)\n"
         }
     ]
 }
