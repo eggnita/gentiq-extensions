@@ -20,6 +20,11 @@ cmd_records() {
         echo "  --include-staged     Include staged actions (vouchers only)"
         echo "  --refresh            Re-fetch a specific record from ERP (requires --fy)"
         echo "  --ensure-fresh       Auto-refresh before fetching (requires --fy)"
+        echo "  --description <q>    Filter by voucher description (substring)"
+        echo "  --rowdescription <q> Filter by voucher row description (substring)"
+        echo "  --series <code>      Filter by voucher series"
+        echo "  --fromdate <d>       TransactionDate >= YYYY-MM-DD"
+        echo "  --todate <d>         TransactionDate <= YYYY-MM-DD"
         return
     fi
 
@@ -48,6 +53,7 @@ cmd_records() {
     # Parse options
     local page="" limit="" fy="" include_staged="false" refresh="false" ensure_fresh="false"
     local email="" phone="" referencenumber=""
+    local description="" rowdescription="" series="" fromdate="" todate=""
     while [ $# -gt 0 ]; do
         case "$1" in
             --page)              page="$2"; shift 2 ;;
@@ -59,6 +65,11 @@ cmd_records() {
             --email)             email="$2"; shift 2 ;;
             --phone)             phone="$2"; shift 2 ;;
             --referencenumber)   referencenumber="$2"; shift 2 ;;
+            --description)       description="$2"; shift 2 ;;
+            --rowdescription)    rowdescription="$2"; shift 2 ;;
+            --series)            series="$2"; shift 2 ;;
+            --fromdate)          fromdate="$2"; shift 2 ;;
+            --todate)            todate="$2"; shift 2 ;;
             *)                   shift ;;
         esac
     done
@@ -106,6 +117,11 @@ cmd_records() {
     [ -n "$email" ] && qs="${qs}&email=${email}"
     [ -n "$phone" ] && qs="${qs}&phone=${phone}"
     [ -n "$referencenumber" ] && qs="${qs}&referencenumber=${referencenumber}"
+    [ -n "$description" ] && qs="${qs}&description=${description}"
+    [ -n "$rowdescription" ] && qs="${qs}&rowdescription=${rowdescription}"
+    [ -n "$series" ] && qs="${qs}&series=${series}"
+    [ -n "$fromdate" ] && qs="${qs}&fromdate=${fromdate}"
+    [ -n "$todate" ] && qs="${qs}&todate=${todate}"
     # FY on LIST queries — when there's no record_id the FY-in-path branch
     # above doesn't fire, so pass it as a query param instead. Matches the
     # convention `files.sh` uses on the same /internal/... family.
