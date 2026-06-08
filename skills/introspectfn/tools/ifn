@@ -48,6 +48,7 @@ Commands:
   auth       login|status|rotate               Authentication and key management
   link       <type> <company_id> [args]         Generate web app deep links
   bk         find|parse|propose|mapping|...  Bookkeeping operations (settlements, adjustments)
+  bko        list|get|propose|approve|execute|...  BKO workflow (Phase-2 bookkeeping)
   version                         Show CLI version
 
 Options:
@@ -180,6 +181,10 @@ case "$COMMAND" in
     bk)
         source "${IFN_CLI_DIR}/commands/bk.sh"
         cmd_bk "$@"
+        ;;
+    bko)
+        source "${IFN_CLI_DIR}/commands/bko.sh"
+        cmd_bko "$@"
         ;;
     *)
         echo "Error: unknown command '$COMMAND'" >&2
