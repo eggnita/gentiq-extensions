@@ -1,0 +1,3 @@
+# Production dependencies: needed by triage, parsers, and BKO builders —
+# i.e. any code path that runs in production when IFN routes a file here.
+pdfplumber

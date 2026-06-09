@@ -1,0 +1,73 @@
+[package]
+name = "ifn-file-orchestrator"
+version = "0.1.0"
+description = "Deterministic bookkeeping file pipeline — triage, parse, build BKOs, and attach payment advices via the ifn-file-orchestrator toolbox"
+author = "Gentiq"
+icon = "📂"
+category = "accounting"
+tags = ["erp", "accounting", "bookkeeping", "files", "bko", "triage", "parsing", "foodora"]
+
+[dependencies]
+requires = ["introspectfn-erp"]
+
+[routing]
+default_operation = "analyze"
+default_complexity = "routine"
+
+# --- Single-file processing ---
+
+[routing.tasks.process_file]
+operation = "reason"
+complexity = "complex"
+description = "Process a bookkeeping file through the full pipeline: triage, parse, build BKO, present for approval"
+triggers = ["process file", "handle file", "book file", "process this file", "handle this invoice", "book this invoice", "run the pipeline on"]
+
+[routing.tasks.triage_file]
+operation = "extract"
+complexity = "trivial"
+description = "Classify a bookkeeping file — determine its type and handling strategy without processing it"
+triggers = ["triage file", "classify file", "what type is this file", "identify file", "what is this file"]
+
+[routing.tasks.parse_file]
+operation = "analyze"
+complexity = "routine"
+description = "Parse a bookkeeping file and extract structured data without building a BKO"
+triggers = ["parse file", "parse invoice", "extract data from", "read invoice", "parse this"]
+
+# --- Batch processing ---
+
+[routing.tasks.process_inbox]
+operation = "reason"
+complexity = "complex"
+description = "Process all files in the ERP inbox one by one: triage, parse, build BKOs, present each for approval"
+triggers = ["process inbox", "process the inbox", "handle inbox", "book inbox files", "process new files", "handle new files", "process bookkeeping files"]
+
+[routing.tasks.triage_inbox]
+operation = "extract"
+complexity = "routine"
+description = "Classify all files in the ERP inbox without processing them"
+triggers = ["triage inbox", "classify inbox", "what's in the inbox", "scan inbox", "list inbox files"]
+
+# --- Payment advice ---
+
+[routing.tasks.attach_payment_advice]
+operation = "reason"
+complexity = "complex"
+description = "Parse a payment advice and attach it to the matching cash-clearing voucher"
+triggers = ["attach payment advice", "handle payment advice", "process payment advice", "match payment advice"]
+
+# --- Credentials (inherits from introspectfn-erp) ---
+[credentials]
+required = []
+configurable = []
+
+# --- Lifecycle Hooks ---
+[lifecycle]
+on_install = "hooks/on_install.sh"
+
+# --- Permissions ---
+[permissions]
+network = []
+tools = ["python3", "pip3", "ifn"]
+cron = false
+setup_ui = false
